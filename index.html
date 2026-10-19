@@ -163,7 +163,9 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 #cv{position:relative;z-index:3}
 /* ปุ่มและแผงบนแผนที่ต้องอยู่เหนือแผ่นบนสุดเสมอ ไม่งั้นจะกดไม่ได้ */
 .layers,.zoomer,#day,.railbtn,.chip,#portrait{z-index:10!important}
-#dtip{z-index:11!important}   /* แผ่นบนสุด: ขอบเมือง แม่น้ำ ชื่อเขต และรับการกด/ซูม */
+#dtip{z-index:11!important}
+body.pt-open #stage{z-index:30}
+body.pt-open #portrait{z-index:25!important}   /* เหนือแถบรายชั่วโมงและปุ่มบนแผนที่ (ที่อยู่ระดับ 10) */   /* เปิดภาพ 24 ชม.: ยกทั้งแผ่นแผนที่ขึ้นเหนือแถบรายชั่วโมงและชื่อเว็บ (มือถือภาพนี้เต็มจอ) */   /* แผ่นบนสุด: ขอบเมือง แม่น้ำ ชื่อเขต และรับการกด/ซูม */
 
 
 .best #best b{background:var(--hl);padding:0 4px;border-radius:3px}
@@ -1421,6 +1423,12 @@ window.BREATHES_CHECK=function(){
   add("ข้อมูลฝุ่น/อากาศ",live||/ตัวอย่าง|จำลอง|สมมุติ|กำลังโหลด/.test(flag),live?"ค่าจริง (Open-Meteo)":"ไม่ใช่ค่าจริง · ป้ายบอก: "+flag,!live);
   add("ข้อมูลฝน/ระดับน้ำ",WATER.ok===true,WATER.ok?("สถานีฝน "+WATER.rain.length+" · ระดับน้ำ "+WATER.levels.length):"ยังไม่ได้/ดึงไม่สำเร็จ",true);
   add("ข้อมูลความสูงพื้นที่",!!ELEV,ELEV?"โหลดแล้ว (DSM รวมตึก มีป้ายบอก)":"ยังไม่ได้/โหลดไม่สำเร็จ",true);
+  /* 6.5) หน้าต่างภาพ 24 ชม. ต้องไม่ถูกอะไรบัง (เปิดชั่วคราวโดยไม่ดึงข้อมูล แล้วปิดคืน) */
+  var wasHidden=ptEl.hidden;ptEl.hidden=false;document.body.classList.add("pt-open");
+  var pr=ptEl.getBoundingClientRect(),over={};
+  for(var gi=1;gi<10;gi++)for(var gj=1;gj<10;gj++){var ge=document.elementFromPoint(pr.left+pr.width*gi/10,pr.top+pr.height*gj/10);if(ge&&!ptEl.contains(ge)) over[ge.id||ge.tagName]=1}
+  if(wasHidden){ptEl.hidden=true;document.body.classList.remove("pt-open")}
+  add("หน้าต่าง 24 ชม. ไม่ถูกบัง",!Object.keys(over).length,Object.keys(over).length?"ถูกบังโดย: "+Object.keys(over).join(", "):"ผ่าน");
   /* 7) error ระหว่างใช้งาน */
   add("ไม่มี error",!RUNTIME_ERRORS.length,RUNTIME_ERRORS.length?RUNTIME_ERRORS.slice(-3).join(" | "):"ไม่มี");
   add("ขนาดจอที่ตรวจ",true,innerWidth+"×"+innerHeight+" · ตรวจมือถือ: ย่อจอเหลือ 375px แล้วรันใหม่",true);
@@ -2094,7 +2102,7 @@ function openPortrait(name,sub,lats,lons){
   document.getElementById("ptName").textContent=name;
   document.getElementById("ptSub").textContent=sub+" · กำลังโหลด 24 ชั่วโมงที่ผ่านมา…";
   if(!PT.open||ptEl.hidden) PT.back=document.activeElement;   /* จำไว้ คืนโฟกัสตอนปิด */
-  ptEl.hidden=false;sizePortrait();document.getElementById("ptClose").focus();
+  ptEl.hidden=false;document.body.classList.add("pt-open");sizePortrait();document.getElementById("ptClose").focus();
   /* Open-Meteo ฝั่งอากาศอาจใช้ ~5–10 วินาที ถ้าเกิน 30 วินาทีบอกผู้ชมแทนการค้างหน้าโหลดไว้เฉยๆ */
   var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error("timeout"))},30000)});
   Promise.race([fetchSeries(lats,lons),timeout]).then(function(d){
@@ -2113,7 +2121,7 @@ function openPortrait(name,sub,lats,lons){
     PT.failed=true;
   });
 }
-function closePortrait(){PT.open=false;ptEl.hidden=true;if(PT.back&&PT.back.focus) PT.back.focus();PT.back=null}
+function closePortrait(){PT.open=false;ptEl.hidden=true;document.body.classList.remove("pt-open");if(PT.back&&PT.back.focus) PT.back.focus();PT.back=null}
 /* กด Tab ในภาพ 24 ชม. วนอยู่ในหน้าต่างนี้ ไม่หลุดไปแผนที่ข้างหลัง */
 ptEl.addEventListener("keydown",function(e){
   if(e.key!=="Tab") return;
