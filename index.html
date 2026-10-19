@@ -1,0 +1,648 @@
+<title>กรุงเทพหายใจ</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: dark instrument panel — readout rail at left, city dot-field canvas filling the rest */
+:root{
+  --bg:#07070b;
+  --panel:#0e0e15;
+  --line:#1e1e2b;
+  --ink:#e9e7f2;
+  --dim:#6d6a85;
+  --calm:#7f74cf;
+  --mid:#e067a6;
+  --hot:#ff8f3c;
+  --crit:#ff3d50;
+  --rain:#6f9be0;
+  --font-ui:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+  --font-data:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);overflow:hidden}
+#shell{display:grid;grid-template-columns:280px 1fr;height:100%;width:100%}
+#rail{
+  background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;
+  padding-block:18px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;
+  display:flex;flex-direction:column;gap:18px;
+}
+h1{font-size:17px;font-weight:600;margin:0;text-wrap:balance}
+.sub{font-size:11px;color:var(--dim);margin-top:4px;line-height:1.55}
+.block{display:flex;flex-direction:column;gap:7px}
+.lab{font-family:var(--font-data);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.chaos-num{font-family:var(--font-data);font-size:40px;font-weight:500;line-height:1;font-variant-numeric:tabular-nums}
+.chaos-word{font-size:12px;color:var(--dim)}
+.bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;transition:width .6s ease}
+.human{border:1px solid var(--line);border-radius:3px;padding:11px 12px;display:flex;flex-direction:column;gap:5px}
+.human b{font-family:var(--font-data);font-size:21px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1}
+.human span{font-size:10.5px;color:var(--dim);line-height:1.5}
+.rank{display:flex;flex-direction:column;gap:4px}
+.row{display:grid;grid-template-columns:78px 1fr 30px;align-items:center;gap:8px;font-size:10.5px;cursor:pointer;padding:1px 0;border-radius:2px}
+.row:hover .nm,.row.on .nm{color:var(--ink)}
+.row .nm{color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .tr{height:4px;background:var(--line);border-radius:2px;overflow:hidden}
+.row .tr i{display:block;height:100%}
+.row .vl{font-family:var(--font-data);text-align:right;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-family:var(--font-data);font-size:10.5px}
+th{text-align:left;font-weight:400;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;font-size:9px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+td{padding:3.5px 0;font-variant-numeric:tabular-nums}
+td.k{font-family:var(--font-ui);font-size:10.5px;color:var(--dim)}
+td.v{text-align:right}
+.key{display:flex;flex-direction:column;gap:7px;font-size:10.5px;color:var(--dim)}
+.key div{display:flex;align-items:flex-start;gap:9px;line-height:1.45}
+.sw{width:14px;height:14px;flex:none;margin-top:1px}
+.sw.grid{background:radial-gradient(circle,#7f74cf 1.2px,transparent 1.6px) 0 0/7px 7px}
+.sw.grid2{background:radial-gradient(circle,#ff8f3c 2.6px,transparent 3px) 0 0/7px 7px}
+.sw.mote{background:radial-gradient(circle,#e9e7f2 1px,transparent 1.4px) 1px 3px/6px 5px}
+.sw.rain{background:repeating-linear-gradient(115deg,var(--rain) 0 1px,transparent 1px 4px);border-radius:50%;opacity:.9}
+.sw.line{height:2px;margin-top:7px;background:rgba(255,220,200,.85)}
+.sw.heat{border-top:1.5px solid var(--hot);border-bottom:1.5px solid var(--hot);height:8px;margin-top:4px}
+#slider{width:100%;accent-color:var(--mid);margin:0}
+.ends{display:flex;justify-content:space-between;font-size:9.5px;color:var(--dim)}
+.btns{display:flex;gap:6px;flex-wrap:wrap}
+.btns button{
+  font:inherit;font-size:10.5px;color:var(--dim);background:transparent;
+  border:1px solid var(--line);border-radius:2px;padding:4px 9px;cursor:pointer;
+}
+.btns button[aria-pressed="true"]{color:var(--ink);border-color:var(--rain)}
+.btns button:focus-visible,#slider:focus-visible,.row:focus-visible{outline:1px solid var(--mid);outline-offset:2px}
+.src{font-size:9.5px;color:var(--dim);line-height:1.65;border-top:1px solid var(--line);padding-top:12px;margin-top:auto}
+.src a{color:var(--calm)}
+#stage{position:relative;min-width:0}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.chip{
+  position:absolute;font-family:var(--font-data);font-size:9.5px;letter-spacing:.08em;
+  color:var(--dim);border:1px solid var(--line);
+  border-radius:2px;padding:4px 8px;background:rgba(7,7,11,.82);
+}
+#flag{top:14px;right:calc(14px + env(safe-area-inset-right,0px));text-transform:uppercase}
+#clock{top:14px;left:calc(14px + env(safe-area-inset-left,0px))}
+@media (max-width:760px){
+  body{overflow:auto}
+  #shell{grid-template-columns:1fr;grid-template-rows:62vh auto;height:auto;min-height:100%}
+  #rail{border-right:0;border-top:1px solid var(--line);order:2}
+  #stage{order:1}
+  .src{margin-top:0}
+}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+
+<div id="shell">
+  <aside id="rail">
+    <div>
+      <h1>กรุงเทพหายใจ</h1>
+      <div class="sub">ทุกจุดบนแผนที่คือค่าฝุ่น ณ ตำแหน่งนั้น ยิ่งแย่ จุดยิ่งใหญ่ ร้อนสี และหลุดออกจากแถว เส้นทึบคือขอบเขตที่ฝุ่นเกินมาตรฐานไทย</div>
+    </div>
+
+    <div class="block">
+      <div class="lab" id="scopeLab">ดัชนีความรก · ทั้งกรุงเทพ</div>
+      <div class="chaos-num" id="chaosNum">—</div>
+      <div class="bar"><i id="chaosBar"></i></div>
+      <div class="chaos-word" id="chaosWord">กำลังอ่านค่า…</div>
+    </div>
+
+    <div class="human">
+      <b id="cig">—</b>
+      <span>มวนต่อวัน คือปริมาณบุหรี่ที่ให้ผลใกล้เคียงกับการหายใจในค่าฝุ่นระดับนี้ อิงอัตรา 22 µg/m³ ต่อ 1 มวน</span>
+    </div>
+
+    <div class="block">
+      <div class="lab">PM2.5 รายเขต · µg/m³</div>
+      <div class="rank" id="rank"></div>
+    </div>
+
+    <div class="block">
+      <div class="lab">เทียบกับวันอากาศดี</div>
+      <input type="range" id="slider" min="0" max="100" value="100" aria-label="ผสมระหว่างวันอากาศดีกับค่าจริง">
+      <div class="ends"><span>วันอากาศดี</span><span>ค่าจริง</span></div>
+    </div>
+
+    <div class="block">
+      <div class="lab">ลองสถานการณ์</div>
+      <div class="btns">
+        <button type="button" id="bLive" aria-pressed="true">ค่าจริง</button>
+        <button type="button" id="bRain" aria-pressed="false">ฝนหนัก</button>
+        <button type="button" id="bSmog" aria-pressed="false">ฝุ่นหน้าแล้ง</button>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="lab">ค่าเฉลี่ยทั้งเมือง</div>
+      <table>
+        <tbody>
+          <tr><td class="k">PM2.5</td><td class="v" id="vPm">—</td></tr>
+          <tr><td class="k">อุณหภูมิ</td><td class="v" id="vT">—</td></tr>
+          <tr><td class="k">ความชื้น</td><td class="v" id="vH">—</td></tr>
+          <tr><td class="k">ฝน</td><td class="v" id="vR">—</td></tr>
+          <tr><td class="k">ลม</td><td class="v" id="vW">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="block">
+      <div class="lab">อ่านภาพยังไง</div>
+      <div class="key">
+        <div><span class="sw grid"></span>จุดเล็กสีม่วง = ฝุ่นน้อย</div>
+        <div><span class="sw grid2"></span>จุดใหญ่สีส้มแดง = ฝุ่นหนัก ยิ่งหนักจุดยิ่งหลุดจากแถวและมีหางตามลม</div>
+        <div><span class="sw mote"></span>เม็ดลอย = ฝุ่นที่ลมพัด จำนวนตามค่าฝุ่น ความเร็วตามลมจริง</div>
+        <div><span class="sw line"></span>เส้นทึบสีอ่อน = 37.5 µg/m³ มาตรฐานไทยเฉลี่ย 24 ชม. ในเส้นคือโซนเกินมาตรฐาน เส้นประ = 25, 50, 75</div>
+        <div><span class="sw rain"></span>วงลายเฉียงสีฟ้า = บริเวณที่ฝนตก เคลื่อนตามลม ฝุ่นใต้ฝนถูกชะจางลง</div>
+        <div><span class="sw heat"></span>ขอบเมืองสั่น = ไอร้อน ยิ่งร้อนยิ่งไหว</div>
+      </div>
+    </div>
+
+    <div class="src" id="src">แหล่งข้อมูล: กำลังเชื่อมต่อ…</div>
+  </aside>
+
+  <div id="stage">
+    <canvas id="cv"></canvas>
+    <div class="chip" id="flag">กำลังโหลด</div>
+    <div class="chip" id="clock">1 วินาที = 5 นาทีจริง</div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ขอบเขตกรุงเทพมหานคร — apisit/thailand.json (ใส่จากไฟล์โดยตรง) */
+var BKK=[[100.85537,13.69198],[100.83672,13.68973],[100.82757,13.69126],[100.81812,13.69591],[100.81455,13.69723],[100.80659,13.69885],[100.79936,13.70102],[100.79657,13.7027],[100.78845,13.70836],[100.78132,13.71136],[100.77326,13.71278],[100.7559,13.7141],[100.72654,13.71146],[100.71321,13.71151],[100.70872,13.71015],[100.70453,13.7072],[100.70045,13.70022],[100.69709,13.69059],[100.69631,13.68702],[100.68763,13.66312],[100.68588,13.66002],[100.68298,13.65723],[100.67874,13.65506],[100.67006,13.65343],[100.66402,13.65297],[100.60567,13.65617],[100.60226,13.65694],[100.59823,13.65839],[100.58526,13.66676],[100.59126,13.67718],[100.59234,13.68004],[100.59461,13.68216],[100.59699,13.68537],[100.59808,13.69144],[100.59591,13.69715],[100.59126,13.69963],[100.5866,13.70133],[100.58443,13.7048],[100.58015,13.70916],[100.57074,13.70805],[100.56139,13.70358],[100.5571,13.69798],[100.54873,13.68167],[100.53756,13.68144],[100.53043,13.67361],[100.52247,13.66529],[100.51937,13.66278],[100.51565,13.6624],[100.50666,13.66643],[100.50341,13.66723],[100.50077,13.66712],[100.49922,13.66545],[100.49839,13.66224],[100.50093,13.64653],[100.50093,13.6403],[100.49612,13.60718],[100.49379,13.59984],[100.48868,13.59408],[100.48139,13.5886],[100.47473,13.58579],[100.46305,13.58351],[100.45995,13.56584],[100.46697,13.49569],[100.46698,13.49567],[100.42994,13.48933],[100.40078,13.49064],[100.40083,13.49073],[100.40383,13.49631],[100.40662,13.49972],[100.4091,13.50223],[100.41044,13.50478],[100.41158,13.50819],[100.41158,13.51207],[100.40517,13.55959],[100.38951,13.61181],[100.38471,13.62077],[100.37277,13.63307],[100.36889,13.63589],[100.36564,13.63749],[100.36176,13.6385],[100.3537,13.63968],[100.34905,13.64909],[100.34595,13.65692],[100.33179,13.73009],[100.32698,13.75107],[100.3291,13.76229],[100.33334,13.77337],[100.33566,13.79872],[100.43158,13.80029],[100.46956,13.7951],[100.47767,13.79487],[100.48139,13.79572],[100.48837,13.7981],[100.49131,13.8005],[100.49333,13.80414],[100.49364,13.81195],[100.49457,13.81755],[100.4972,13.82334],[100.51617,13.84099],[100.52175,13.8482],[100.55152,13.94786],[100.58536,13.94248],[100.66324,13.92008],[100.67859,13.91804],[100.83672,13.93662],[100.8622,13.94274],[100.8856,13.94499],[100.90483,13.94979],[100.89692,13.8468],[100.89863,13.84122],[100.90126,13.8374],[100.91273,13.83009],[100.91759,13.82606],[100.92147,13.82135],[100.92426,13.81753],[100.92359,13.81342],[100.92116,13.80766],[100.89878,13.78435],[100.89351,13.77748],[100.85734,13.71852],[100.84928,13.70916],[100.84866,13.7041],[100.85537,13.69198]];
+/* แม่น้ำเจ้าพระยา — Natural Earth 10m */
+var CPY=[[100.5712,13.9953],[100.574,13.9779],[100.5425,13.8378],[100.5288,13.8046],[100.5084,13.7826],[100.4981,13.7674],[100.4947,13.7494],[100.5012,13.7397],[100.5109,13.728],[100.5127,13.7149],[100.4947,13.701],[100.4947,13.6948],[100.5084,13.6884],[100.5293,13.6813],[100.5486,13.6816],[100.5569,13.6979],[100.5611,13.7036],[100.5706,13.708],[100.58,13.7091],[100.5842,13.7047],[100.5864,13.7013],[100.5909,13.6996],[100.5957,13.6971],[100.5977,13.6914],[100.5967,13.6853],[100.5943,13.6822],[100.5921,13.68],[100.5909,13.6771],[100.5831,13.6635],[100.5497,13.6577],[100.5431,13.6402],[100.5518,13.6267],[100.5874,13.6166],[100.5977,13.6122]];
+
+var STATIONS=[
+ {n:"พระนคร",lat:13.764,lon:100.498,dx:8,dy:-6},
+ {n:"ดินแดง",lat:13.770,lon:100.552,dx:8,dy:4},
+ {n:"จตุจักร",lat:13.829,lon:100.550,dx:8,dy:4},
+ {n:"บางเขน",lat:13.874,lon:100.619,dx:8,dy:4},
+ {n:"ดอนเมือง",lat:13.925,lon:100.593,dx:8,dy:4},
+ {n:"หนองจอก",lat:13.856,lon:100.862,dx:-8,dy:-8,r:1},
+ {n:"ลาดกระบัง",lat:13.722,lon:100.787,dx:8,dy:4},
+ {n:"บางนา",lat:13.668,lon:100.604,dx:8,dy:4},
+ {n:"ทุ่งครุ",lat:13.640,lon:100.497,dx:8,dy:4},
+ {n:"ราษฎร์บูรณะ",lat:13.682,lon:100.505,dx:-8,dy:-6,r:1},
+ {n:"บางแค",lat:13.712,lon:100.409,dx:-8,dy:-6,r:1},
+ {n:"ตลิ่งชัน",lat:13.777,lon:100.440,dx:-8,dy:-6,r:1}
+];
+
+var BOUNDS={lo1:100.31,lo2:100.94,la1:13.475,la2:13.965};
+var TIME_SCALE=300, KM_PER_DEG=111;
+
+var MOCK=STATIONS.map(function(s,i){
+  var urban=1-Math.min(1,Math.abs(s.lon-100.54)*2.4+Math.abs(s.lat-13.76)*2.0);
+  return {pm:17+urban*26+(i%3)*2.5,t:29.4+urban*2.1,h:71+(i%5)*3,r:0.4+(i%4===0?1.2:0),ws:9+(i%5),wd:215+(i%4)*8};
+});
+var RAIN={pm:0,r:9,h:93,t:-3,ws:6};      /* ตัวปรับสถานการณ์ */
+var SMOG={pm:58,r:-5,h:-14,t:3,ws:-7};
+var GOOD={pm:8,t:27.5,h:62,r:0,ws:15};
+
+var data=null,mix=1,picked=-1,scen=null;
+
+function clamp01(v){return v<0?0:v>1?1:v}
+function pmColor(pm){
+  var st=[[0,[110,100,196]],[15,[127,116,207]],[25,[224,103,166]],[45,[255,143,60]],[75,[255,61,80]],[300,[255,61,80]]];
+  for(var i=0;i<st.length-1;i++){
+    if(pm<=st[i+1][0]){
+      var a=st[i],b=st[i+1],u=(pm-a[0])/(b[0]-a[0]||1);
+      return [Math.round(a[1][0]+(b[1][0]-a[1][0])*u),Math.round(a[1][1]+(b[1][1]-a[1][1])*u),Math.round(a[1][2]+(b[1][2]-a[1][2])*u)];
+    }
+  }
+  return [255,61,80];
+}
+function rgb(c,a){return "rgba("+c[0]+","+c[1]+","+c[2]+","+a+")"}
+
+function base(i){
+  var d=(data||MOCK)[i];
+  var o={pm:d.pm,t:d.t,h:d.h,r:d.r,ws:d.ws,wd:d.wd};
+  if(scen==="rain"){o.pm=Math.max(4,o.pm*0.55);o.r=RAIN.r+(i%3);o.h=RAIN.h;o.t+=RAIN.t;o.ws=Math.max(o.ws,14)}
+  if(scen==="smog"){o.pm+=SMOG.pm+(i%4)*6;o.r=0;o.h+=SMOG.h;o.t+=SMOG.t;o.ws=Math.max(1.5,o.ws+SMOG.ws)}
+  return o;
+}
+function cur(i){
+  var d=base(i);
+  return {pm:GOOD.pm+(d.pm-GOOD.pm)*mix,t:GOOD.t+(d.t-GOOD.t)*mix,h:GOOD.h+(d.h-GOOD.h)*mix,
+          r:GOOD.r+(d.r-GOOD.r)*mix,ws:GOOD.ws+(d.ws-GOOD.ws)*mix,wd:d.wd};
+}
+var CUR=[];
+function snapshot(){CUR=STATIONS.map(function(s,i){return cur(i)})}
+function sample(lon,lat,key){
+  var num=0,den=0;
+  for(var i=0;i<STATIONS.length;i++){
+    var s=STATIONS[i],dx=(s.lon-lon),dy=(s.lat-lat);
+    var w=1/Math.pow(dx*dx+dy*dy+0.0004,1.3);
+    num+=CUR[i][key]*w;den+=w;
+  }
+  return num/den;
+}
+function avg(){
+  var o={pm:0,t:0,h:0,r:0,ws:0},sx=0,sy=0,n=CUR.length;
+  CUR.forEach(function(c){o.pm+=c.pm;o.t+=c.t;o.h+=c.h;o.r+=c.r;o.ws+=c.ws;var a=c.wd*Math.PI/180;sx+=Math.cos(a);sy+=Math.sin(a)});
+  o.pm/=n;o.t/=n;o.h/=n;o.r/=n;o.ws/=n;o.wd=(Math.atan2(sy,sx)*180/Math.PI+360)%360;
+  return o;
+}
+function chaosOf(c){
+  return clamp01(clamp01((c.pm-8)/70)*0.42+clamp01((c.t-28)/10)*0.18+clamp01(c.r/12)*0.14+clamp01((6-c.ws)/6)*0.16+clamp01((c.h-60)/35)*0.10);
+}
+
+/* ---------- projection ---------- */
+var cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+var W=0,H=0,DPR=1,PX=0,PY=0,PS=1,MW=0,MH=0,PXPERKM=1,COSL=Math.cos(13.75*Math.PI/180);
+function px(lon){return PX+(lon-BOUNDS.lo1)*PS*COSL}
+function py(lat){return PY+(BOUNDS.la2-lat)*PS}
+function invX(x){return BOUNDS.lo1+(x-PX)/(PS*COSL)}
+function invY(y){return BOUNDS.la2-(y-PY)/PS}
+var cityPath2D=null,riverPath2D=null,gridPts=[],GRID=null;
+
+function fit(){
+  var r=cv.getBoundingClientRect();
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  W=Math.max(320,r.width);H=Math.max(280,r.height);
+  cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  var dw=(BOUNDS.lo2-BOUNDS.lo1)*COSL,dh=BOUNDS.la2-BOUNDS.la1,pad=W<600?22:54;
+  PS=Math.min((W-pad*2)/dw,(H-pad*2-20)/dh);
+  MW=dw*PS;MH=dh*PS;PX=(W-MW)/2;PY=(H-MH)/2+6;
+  PXPERKM=PS/KM_PER_DEG;
+  cityPath2D=new Path2D();
+  BKK.forEach(function(p,i){var X=px(p[0]),Y=py(p[1]);i?cityPath2D.lineTo(X,Y):cityPath2D.moveTo(X,Y)});
+  cityPath2D.closePath();
+  riverPath2D=new Path2D();
+  CPY.forEach(function(p,i){var X=px(p[0]),Y=py(p[1]);i?riverPath2D.lineTo(X,Y):riverPath2D.moveTo(X,Y)});
+  /* กริดจุดในเขตเมือง */
+  var step=Math.max(7,Math.round(MW/88));
+  gridPts=[];GRID={step:step,cols:0,rows:0,v:[],x0:PX,y0:PY};
+  var rows=0;
+  for(var y=PY;y<=PY+MH+0.01;y+=step){
+    var cols=0;
+    for(var x=PX;x<=PX+MW+0.01;x+=step){
+      if(ctx.isPointInPath(cityPath2D,x*DPR,y*DPR)) gridPts.push({x:x,y:y,lon:invX(x),lat:invY(y),step:step,h:Math.random()*6.283});
+      cols++;
+    }
+    GRID.cols=cols;rows++;
+  }
+  GRID.rows=rows;
+  motes=[];cells=[];
+  buildField();
+}
+
+/* ---------- ชั้นฐาน: กริดจุด PM2.5 ---------- */
+function buildField(){
+  if(!gridPts.length) return;
+  gridPts.forEach(function(g){g.pm=sample(g.lon,g.lat,"pm")});
+  GRID.v=[];
+  for(var r=0;r<GRID.rows;r++){
+    for(var c=0;c<GRID.cols;c++){
+      GRID.v.push(sample(invX(GRID.x0+c*GRID.step),invY(GRID.y0+r*GRID.step),"pm"));
+    }
+  }
+}
+/* เส้นชั้นค่าฝุ่น (marching squares) */
+function contour(level){
+  var s=GRID.step,C=GRID.cols,R=GRID.rows,v=GRID.v,path=new Path2D();
+  function V(r,c){return v[r*C+c]}
+  function lerp(a,b){return (level-a)/(b-a)}
+  for(var r=0;r<R-1;r++){
+    for(var c=0;c<C-1;c++){
+      var a=V(r,c),b=V(r,c+1),d=V(r+1,c+1),e=V(r+1,c);
+      var idx=(a>=level?8:0)|(b>=level?4:0)|(d>=level?2:0)|(e>=level?1:0);
+      if(idx===0||idx===15) continue;
+      var x=GRID.x0+c*s,y=GRID.y0+r*s;
+      var T=[x+lerp(a,b)*s,y],Rr=[x+s,y+lerp(b,d)*s],B=[x+lerp(e,d)*s,y+s],L=[x,y+lerp(a,e)*s];
+      var segs={1:[[L,B]],2:[[B,Rr]],3:[[L,Rr]],4:[[T,Rr]],5:[[L,T],[B,Rr]],6:[[T,B]],7:[[L,T]],
+                8:[[L,T]],9:[[T,B]],10:[[T,Rr],[L,B]],11:[[T,Rr]],12:[[L,Rr]],13:[[B,Rr]],14:[[L,B]]}[idx];
+      segs.forEach(function(sg){path.moveTo(sg[0][0],sg[0][1]);path.lineTo(sg[1][0],sg[1][1])});
+    }
+  }
+  return path;
+}
+
+/* ---------- ฝน: เซลล์เคลื่อนตามลม ---------- */
+var cells=[];
+function windVec(lon,lat){
+  var dir=sample(lon,lat,"wd"),spd=sample(lon,lat,"ws");
+  var rad=(270-dir)*Math.PI/180,pxs=spd*PXPERKM*TIME_SCALE/3600;
+  return {x:Math.cos(rad)*pxs,y:-Math.sin(rad)*pxs,spd:spd};
+}
+function newCell(edge){
+  var a=avg(),w=windVec(100.6,13.72),x,y;
+  if(edge){
+    if(Math.abs(w.x)>=Math.abs(w.y)){x=w.x>0?PX-120:PX+MW+120;y=PY+Math.random()*MH}
+    else{y=w.y>0?PY-120:PY+MH+120;x=PX+Math.random()*MW}
+  }else{x=PX+Math.random()*MW;y=PY+Math.random()*MH}
+  var size=(5+Math.random()*7)*PXPERKM*(0.8+clamp01(a.r/10)*0.6);
+  return {x:x,y:y,r:size,ph:Math.random()*6.283};
+}
+function stepCells(dt){
+  var a=avg();
+  var target=a.r<0.15?0:Math.min(6,1+Math.round(a.r*0.45));
+  while(cells.length<target) cells.push(newCell(false));
+  if(cells.length>target) cells.length=target;
+  for(var i=0;i<cells.length;i++){
+    var c=cells[i],w=windVec(invX(c.x),invY(c.y));
+    c.x+=w.x*dt;c.y+=w.y*dt;c.ph+=dt*0.2;
+    if(c.x<PX-c.r-140||c.x>PX+MW+c.r+140||c.y<PY-c.r-140||c.y>PY+MH+c.r+140) cells[i]=newCell(true);
+  }
+}
+function rainAt(x,y){
+  var v=0;
+  for(var i=0;i<cells.length;i++){
+    var c=cells[i],dx=x-c.x,dy=y-c.y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<c.r) v+=1-d/c.r;
+  }
+  return Math.min(1,v*1.4);
+}
+
+/* ---------- เม็ดฝุ่นลอย ---------- */
+var motes=[];
+function spawnMote(){
+  var g=gridPts[Math.floor(Math.random()*gridPts.length)];
+  /* เกิดบ่อยกว่าในจุดที่ฝุ่นหนัก */
+  for(var t=0;t<3;t++){
+    var h=gridPts[Math.floor(Math.random()*gridPts.length)];
+    if(h&&g&&h.pm>g.pm) g=h;
+  }
+  return {x:g.x+(Math.random()-0.5)*g.step,y:g.y+(Math.random()-0.5)*g.step,age:0,max:6+Math.random()*10,s:0.8+Math.random()*0.9};
+}
+function stepMotes(dt){
+  if(!gridPts.length) return;
+  var a=avg();
+  var target=Math.min(1600,Math.round(Math.pow(a.pm,1.25)*6));
+  while(motes.length<target) motes.push(spawnMote());
+  if(motes.length>target) motes.length=target;
+  for(var i=0;i<motes.length;i++){
+    var m=motes[i],w=windVec(invX(m.x),invY(m.y));
+    var turb=0.6+w.spd*0.05;
+    m.x+=(w.x+(Math.random()-0.5)*turb)*dt;
+    m.y+=(w.y+(Math.random()-0.5)*turb)*dt;
+    m.age+=dt;
+    var rn=rainAt(m.x,m.y);
+    if(rn>0){m.y+=rn*10*dt;if(Math.random()<rn*1.2*dt) m.age=m.max}
+    if(m.age>=m.max||m.x<PX-30||m.x>PX+MW+30||m.y<PY-30||m.y>PY+MH+30) motes[i]=spawnMote();
+  }
+}
+
+/* ---------- วาด ---------- */
+function draw(time){
+  var a=avg(),k=chaosOf(a),heat=clamp01((a.t-28)/10);
+  ctx.fillStyle="#07070b";ctx.fillRect(0,0,W,H);
+
+  /* ความชื้น: ม่านฟุ้งรอบเมือง */
+  var hum=clamp01((a.h-55)/40);
+  if(hum>0.02){
+    var gg=ctx.createRadialGradient(PX+MW/2,PY+MH/2,MW*0.1,PX+MW/2,PY+MH/2,Math.max(MW,MH)*0.75);
+    gg.addColorStop(0,"rgba(170,180,215,"+(hum*0.07).toFixed(3)+")");
+    gg.addColorStop(1,"rgba(170,180,215,0)");
+    ctx.fillStyle=gg;ctx.fillRect(0,0,W,H);
+  }
+
+  /* พื้นเมือง */
+  ctx.fillStyle="rgba(24,23,36,0.9)";ctx.fill(cityPath2D);
+
+  /* กริดจุดฝุ่น */
+  var wv=windVec(100.6,13.75),wl=Math.sqrt(wv.x*wv.x+wv.y*wv.y)||1,wux=wv.x/wl,wuy=wv.y/wl;
+  for(var i=0;i<gridPts.length;i++){
+    var g=gridPts[i];
+    var rn=rainAt(g.x,g.y);
+    var pm=g.pm*(1-rn*0.6);
+    var col=pmColor(pm);
+    var lv=clamp01((pm-5)/90);
+    var rad=g.step*(0.10+0.40*Math.sqrt(lv));
+    /* ความรก: จุดหลุดจากกริดตามค่าฝุ่นของจุดนั้น */
+    var dis=Math.pow(clamp01((pm-20)/80),1.4)*g.step*1.6;
+    var ox=0,oy=0;
+    if(dis>0.05){
+      ox=Math.sin(time*0.35+g.h)*dis+wux*dis*0.8*(0.5+0.5*Math.sin(time*0.2+g.h*2));
+      oy=Math.cos(time*0.3+g.h*1.3)*dis+wuy*dis*0.8*(0.5+0.5*Math.sin(time*0.2+g.h*2));
+    }
+    ctx.fillStyle=rgb(col,0.92);
+    ctx.beginPath();ctx.arc(g.x+ox,g.y+oy,rad,0,6.2832);ctx.fill();
+    /* หางฝุ่นตามลม เมื่อหนัก */
+    if(dis>g.step*0.35){
+      ctx.strokeStyle=rgb(col,0.28);ctx.lineWidth=Math.max(0.6,rad*0.7);
+      ctx.beginPath();ctx.moveTo(g.x+ox,g.y+oy);ctx.lineTo(g.x+ox-wux*dis*1.6,g.y+oy-wuy*dis*1.6);ctx.stroke();
+    }
+  }
+
+  /* เส้นชั้นค่าฝุ่น */
+  ctx.save();ctx.clip(cityPath2D);
+  [[25,"rgba(233,231,242,0.22)",[2,3]],[37.5,"rgba(255,220,200,0.85)",[]],[50,"rgba(255,170,120,0.55)",[4,3]],[75,"rgba(255,90,100,0.6)",[4,3]]].forEach(function(L){
+    var pth=contour(L[0]);
+    ctx.setLineDash(L[2]);ctx.lineWidth=L[0]===37.5?1.6:1;
+    ctx.strokeStyle="rgba(7,7,11,0.85)";ctx.lineWidth+=2;ctx.stroke(pth);
+    ctx.lineWidth-=2;ctx.strokeStyle=L[1];ctx.stroke(pth);
+  });
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  /* บริเวณฝน: ลายเฉียง */
+  if(cells.length){
+    ctx.save();ctx.clip(cityPath2D);
+    ctx.strokeStyle="rgba(111,155,224,0.55)";ctx.lineWidth=1;
+    for(var c=0;c<cells.length;c++){
+      var ce=cells[c];
+      ctx.save();
+      ctx.beginPath();ctx.arc(ce.x,ce.y,ce.r,0,6.2832);ctx.clip();
+      var gr=ctx.createRadialGradient(ce.x,ce.y,0,ce.x,ce.y,ce.r);
+      gr.addColorStop(0,"rgba(111,155,224,0.16)");gr.addColorStop(1,"rgba(111,155,224,0)");
+      ctx.fillStyle=gr;ctx.fillRect(ce.x-ce.r,ce.y-ce.r,ce.r*2,ce.r*2);
+      ctx.beginPath();
+      var off=(time*14)%8;
+      for(var s=-ce.r*2;s<ce.r*2;s+=7){
+        ctx.moveTo(ce.x+s+off-ce.r*0.47,ce.y-ce.r);ctx.lineTo(ce.x+s+off+ce.r*0.47,ce.y+ce.r);
+      }
+      ctx.globalAlpha=0.38;ctx.stroke();ctx.globalAlpha=1;
+      ctx.restore();
+      ctx.setLineDash([2,3]);ctx.strokeStyle="rgba(111,155,224,0.6)";
+      ctx.beginPath();ctx.arc(ce.x,ce.y,ce.r,0,6.2832);ctx.stroke();ctx.setLineDash([]);
+    }
+    ctx.restore();
+  }
+
+  /* เม็ดฝุ่นลอย */
+  ctx.fillStyle="rgba(240,236,250,"+(0.55+k*0.35).toFixed(3)+")";
+  for(var m=0;m<motes.length;m++){
+    var mo=motes[m],fade=Math.min(1,mo.age/1.2,(mo.max-mo.age)/1.2);
+    if(fade<=0) continue;
+    ctx.globalAlpha=fade;ctx.fillRect(mo.x,mo.y,mo.s,mo.s);
+  }
+  ctx.globalAlpha=1;
+
+  /* ขอบเมือง (ไอร้อน) */
+  ctx.save();
+  ctx.lineWidth=1.3;ctx.strokeStyle="rgba(200,196,232,0.75)";
+  if(heat>0.02){
+    ctx.beginPath();
+    for(var b=0;b<=BKK.length;b++){
+      var p=BKK[b%BKK.length],Y=py(p[1]);
+      var X=px(p[0])+Math.sin(Y*0.06+time*0.7)*heat*2.6;
+      b?ctx.lineTo(X,Y):ctx.moveTo(X,Y);
+    }
+    ctx.closePath();ctx.stroke();
+  }else ctx.stroke(cityPath2D);
+  /* แม่น้ำ */
+  ctx.lineWidth=Math.max(2.5,PXPERKM*0.45);ctx.strokeStyle="#07070b";ctx.stroke(riverPath2D);
+  ctx.lineWidth=1.4;ctx.strokeStyle="rgba(111,155,224,0.75)";ctx.stroke(riverPath2D);
+  ctx.restore();
+
+  drawLabels(k);
+  drawFurniture(a);
+}
+
+function drawLabels(k){
+  ctx.save();
+  var big=W>620;
+  for(var i=0;i<STATIONS.length;i++){
+    var s=STATIONS[i],c=CUR[i],col=pmColor(c.pm),on=(i===picked);
+    if(!big&&!on&&i%2) continue;
+    var X=px(s.lon),Y=py(s.lat);
+    ctx.fillStyle="#07070b";ctx.beginPath();ctx.arc(X,Y,on?5:3.6,0,6.2832);ctx.fill();
+    ctx.fillStyle=rgb(col,1);ctx.beginPath();ctx.arc(X,Y,on?3.6:2.4,0,6.2832);ctx.fill();
+    if(on){ctx.strokeStyle=rgb(col,0.9);ctx.lineWidth=1;ctx.beginPath();ctx.arc(X,Y,12,0,6.2832);ctx.stroke()}
+    var tx=X+s.dx,ty=Y+s.dy;
+    ctx.textAlign=s.r?"right":"left";
+    ctx.font=(on?"600 ":"500 ")+(big?"11.5px":"10px")+" 'IBM Plex Sans Thai',sans-serif";
+    ctx.lineWidth=3.2;ctx.strokeStyle="rgba(7,7,11,0.92)";ctx.lineJoin="round";
+    ctx.strokeText(s.n,tx,ty);
+    ctx.fillStyle="rgba(233,231,242,"+(on?1:0.9)+")";ctx.fillText(s.n,tx,ty);
+    ctx.font=(big?"10.5px":"9.5px")+" 'IBM Plex Mono',monospace";
+    ctx.strokeText(c.pm.toFixed(0),tx,ty+12);
+    ctx.fillStyle=rgb(col,1);ctx.fillText(c.pm.toFixed(0),tx,ty+12);
+  }
+  ctx.restore();
+}
+
+function drawFurniture(a){
+  ctx.save();
+  ctx.font="9.5px 'IBM Plex Mono',monospace";ctx.fillStyle="rgba(140,136,170,0.95)";
+  ctx.strokeStyle="rgba(140,136,170,0.85)";ctx.lineWidth=1;
+  /* มาตราส่วน */
+  var len=10*PXPERKM,x0=Math.max(14,PX),y0=H-18;
+  ctx.beginPath();ctx.moveTo(x0,y0-4);ctx.lineTo(x0,y0);ctx.lineTo(x0+len,y0);ctx.lineTo(x0+len,y0-4);ctx.stroke();
+  ctx.fillText("10 กม.",x0+len+6,y0+3);
+  /* ลม */
+  var wx=W-(W<600?118:150),wy=H-24,rad=(270-a.wd)*Math.PI/180,L=14;
+  var sx=wx-Math.cos(rad)*L,sy=wy+Math.sin(rad)*L,ex=wx+Math.cos(rad)*L,ey=wy-Math.sin(rad)*L;
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-Math.cos(rad-0.5)*6,ey+Math.sin(rad-0.5)*6);
+  ctx.lineTo(ex-Math.cos(rad+0.5)*6,ey+Math.sin(rad+0.5)*6);ctx.closePath();ctx.fill();
+  ctx.fillText("ลม "+a.ws.toFixed(0)+" กม./ชม.",wx+22,wy+3);
+  /* ทิศเหนือ */
+  var nx=W-26,ny=52;
+  ctx.beginPath();ctx.moveTo(nx,ny+12);ctx.lineTo(nx,ny-6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(nx-3.5,ny-1);ctx.lineTo(nx,ny-7);ctx.lineTo(nx+3.5,ny-1);ctx.closePath();ctx.fill();
+  ctx.fillText("N",nx-3,ny+24);
+  ctx.restore();
+}
+
+/* ---------- ลูป ---------- */
+var last=0,reduce=false;
+try{reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches}catch(e){}
+function frame(ts){
+  if(!last) last=ts;
+  var dt=Math.min(0.08,(ts-last)/1000);last=ts;
+  if(reduce) dt*=0.25;
+  stepCells(dt);stepMotes(dt);draw(ts/1000);
+  requestAnimationFrame(frame);
+}
+
+/* ---------- แผง ---------- */
+function words(v){
+  if(v<0.18) return "โล่ง อากาศดี";
+  if(v<0.34) return "พอรับได้";
+  if(v<0.52) return "เริ่มหนัก";
+  if(v<0.72) return "แย่ ควรเลี่ยงกลางแจ้ง";
+  return "วิกฤต";
+}
+function buildRank(){
+  var box=document.getElementById("rank");box.innerHTML="";
+  var order=STATIONS.map(function(s,i){return i}).sort(function(a,b){return CUR[b].pm-CUR[a].pm});
+  var mx=Math.max(60,CUR[order[0]].pm);
+  order.forEach(function(i){
+    var c=CUR[i],col=pmColor(c.pm);
+    var row=document.createElement("div");
+    row.className="row"+(i===picked?" on":"");row.tabIndex=0;row.setAttribute("role","button");
+    row.innerHTML='<span class="nm"></span><span class="tr"><i></i></span><span class="vl"></span>';
+    row.querySelector(".nm").textContent=STATIONS[i].n;
+    var bar=row.querySelector(".tr i");bar.style.width=(c.pm/mx*100).toFixed(1)+"%";bar.style.background=rgb(col,1);
+    var vl=row.querySelector(".vl");vl.textContent=c.pm.toFixed(0);vl.style.color=rgb(col,1);
+    function pick(){picked=(picked===i?-1:i);refresh()}
+    row.addEventListener("click",pick);
+    row.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick()}});
+    box.appendChild(row);
+  });
+}
+function refresh(){
+  snapshot();buildField();
+  var c=picked>=0?CUR[picked]:avg(),a=avg();
+  var v=chaosOf(c),pct=Math.round(v*100),col=pmColor(c.pm);
+  document.getElementById("scopeLab").textContent="ดัชนีความรก · "+(picked>=0?STATIONS[picked].n:"ทั้งกรุงเทพ");
+  var num=document.getElementById("chaosNum");num.textContent=pct;num.style.color=rgb(col,1);
+  document.getElementById("chaosWord").textContent=words(v);
+  var bar=document.getElementById("chaosBar");bar.style.width=pct+"%";bar.style.background=rgb(col,1);
+  document.getElementById("cig").textContent=(c.pm/22).toFixed(1);
+  document.getElementById("vPm").textContent=a.pm.toFixed(1)+" µg/m³";
+  document.getElementById("vT").textContent=a.t.toFixed(1)+" °C";
+  document.getElementById("vH").textContent=a.h.toFixed(0)+" %";
+  document.getElementById("vR").textContent=a.r.toFixed(1)+" mm";
+  document.getElementById("vW").textContent=a.ws.toFixed(1)+" km/h";
+  buildRank();
+  setFlag();
+}
+var liveOK=null;
+function setFlag(){
+  var f=document.getElementById("flag");
+  var base=liveOK===null?"กำลังโหลด":liveOK?"live · ข้อมูลจริง":"ค่าตัวอย่าง";
+  if(scen==="rain") base="จำลอง · ฝนหนัก";
+  if(scen==="smog") base="จำลอง · ฝุ่นหน้าแล้ง";
+  f.textContent=base;
+}
+document.getElementById("slider").addEventListener("input",function(e){mix=parseInt(e.target.value,10)/100;refresh()});
+function setScen(s){
+  scen=s;cells=[];
+  [["bLive",null],["bRain","rain"],["bSmog","smog"]].forEach(function(b){document.getElementById(b[0]).setAttribute("aria-pressed",String(b[1]===s))});
+  refresh();
+}
+document.getElementById("bLive").addEventListener("click",function(){setScen(null)});
+document.getElementById("bRain").addEventListener("click",function(){setScen("rain")});
+document.getElementById("bSmog").addEventListener("click",function(){setScen("smog")});
+cv.addEventListener("click",function(e){
+  var r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,best=-1,bd=1e9;
+  STATIONS.forEach(function(s,i){var dx=px(s.lon)-mx,dy=py(s.lat)-my,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i}});
+  picked=(bd<26*26&&best!==picked)?best:-1;refresh();
+});
+
+/* ---------- ข้อมูลสด ---------- */
+function stamp(){try{return new Date().toLocaleString("th-TH",{timeZone:"Asia/Bangkok",dateStyle:"medium",timeStyle:"short"})}catch(e){return new Date().toISOString()}}
+var CRED=' · ขอบเขต กทม. จาก <a href="https://github.com/apisit/thailand.json" target="_blank" rel="noopener">apisit/thailand.json</a>'+
+  ' · เจ้าพระยาจาก Natural Earth (เส้นหยาบ)'+
+  ' · ค่าระหว่างจุดวัดประมาณจาก 12 จุดใกล้เคียง'+
+  ' · อัตราบุหรี่จาก <a href="https://berkeleyearth.org/air-pollution-and-cigarette-equivalence" target="_blank" rel="noopener">Berkeley Earth</a>';
+function load(){
+  var lats=STATIONS.map(function(s){return s.lat}).join(","),lons=STATIONS.map(function(s){return s.lon}).join(",");
+  var aq="https://air-quality-api.open-meteo.com/v1/air-quality?latitude="+lats+"&longitude="+lons+"&current=pm2_5&timezone=Asia%2FBangkok";
+  var wx="https://api.open-meteo.com/v1/forecast?latitude="+lats+"&longitude="+lons+"&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m&timezone=Asia%2FBangkok";
+  Promise.all([fetch(aq).then(function(r){return r.json()}),fetch(wx).then(function(r){return r.json()})])
+  .then(function(res){
+    var A=Array.isArray(res[0])?res[0]:[res[0]],B=Array.isArray(res[1])?res[1]:[res[1]];
+    if(A.length<STATIONS.length||B.length<STATIONS.length) throw new Error("short");
+    data=STATIONS.map(function(s,i){return {pm:A[i].current.pm2_5==null?MOCK[i].pm:A[i].current.pm2_5,t:B[i].current.temperature_2m,h:B[i].current.relative_humidity_2m,r:B[i].current.precipitation||0,ws:B[i].current.wind_speed_10m,wd:B[i].current.wind_direction_10m}});
+    liveOK=true;
+    document.getElementById("src").innerHTML="ข้อมูลสดจาก Open-Meteo อ่านเมื่อ "+stamp()+CRED;
+    refresh();
+  }).catch(function(){
+    data=null;liveOK=false;
+    document.getElementById("src").innerHTML="ดึงข้อมูลสดไม่สำเร็จ กำลังแสดงค่าตัวอย่าง <strong>ไม่ใช่ค่าจริง</strong>"+CRED;
+    refresh();
+  });
+}
+
+snapshot();
+window.addEventListener("resize",function(){fit()});
+fit();refresh();load();
+requestAnimationFrame(frame);
+})();
+</script>
