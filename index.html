@@ -47,7 +47,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;background-ima
   padding-left:max(calc(var(--u)*3),env(safe-area-inset-left,0px));padding-right:calc(var(--u)*1.5);
   display:flex;flex-direction:column;gap:calc(var(--u)*1.5);
 }
-h1{font-family:var(--font-th);font-size:44px;font-weight:700;line-height:1;letter-spacing:-.02em;margin:0;color:var(--hl);text-shadow:0 1px 0 rgba(0,0,0,.06)}
+h1{font-family:var(--font-th);font-size:44px;font-weight:700;line-height:1;letter-spacing:-.02em;margin:0;color:var(--hl);-webkit-text-stroke:1.5px rgba(11,11,20,.75);paint-order:stroke fill;text-shadow:0 2px 6px rgba(11,11,20,.35)}   /* ขอบเข้มรอบตัวอักษรเหลือง ให้อ่านออกบนฟ้าสว่าง */
 .sub{font-family:var(--font-serif);font-size:13px;color:var(--ink);margin-top:var(--u);line-height:1.65;max-width:32ch}
 .block{
   display:flex;flex-direction:column;gap:var(--u);
@@ -117,7 +117,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
   
 }
 #flag{top:calc(var(--u)*3);right:calc(var(--u)*3 + env(safe-area-inset-right,0px));text-transform:uppercase}
-#flag.warn{background:var(--red);border-color:var(--red);color:#fff}
+#flag.warn{background:#b3261e;border-color:#b3261e;color:#fff}
 #clock{top:calc(var(--u)*3);left:calc(360px + var(--u)*2)}
 #dtip{background:var(--hl);border-color:var(--ink)}
 #day{
@@ -185,6 +185,10 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .ov-name{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ov-name b{font-size:22px;font-weight:700}
 .ov-name .ptbtn{margin:0}
+.vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.distpick{display:flex;gap:6px;align-items:center;margin:6px 0 2px;font-size:12px;color:var(--dim)}
+.distpick select{flex:1;min-width:0;font:inherit;font-size:13px;padding:6px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 #ovFlower{width:100%;height:240px}
 /* ปุ่มชั้น: จุดสีหน้าปุ่ม = สีของชั้น, ชั้นหลักมีขีดเส้นใต้ */
 /* แถบปุ่มชั้นเริ่มถัดจากปุ่มซ่อนข้อมูล ไม่ให้ถูกแผงซ้ายบัง */
@@ -214,7 +218,8 @@ body.rail-off .layers{max-width:calc(100% - 220px)}
 .zoomer{position:absolute;right:calc(var(--u)*3);top:110px;display:flex;flex-direction:column;gap:4px;z-index:2}
 .zoomer button{width:34px;height:34px;font-size:18px;font-weight:600;color:var(--ink);background:var(--glass-strong);border:1px solid var(--edge);border-radius:4px;cursor:pointer;}
 .zoomer button:hover{background:var(--hl)}
-canvas#cv{touch-action:pan-y}   /* มือถือ: ปัดขึ้นลงยังเลื่อนหน้าได้ หยิกสองนิ้วซูมแผนที่ */
+canvas#cv{touch-action:pan-y}
+body.zoomed canvas#cv{touch-action:none}   /* ซูมอยู่: ลากนิ้วเดียว = เลื่อนแผนที่ ไม่เลื่อนหน้า */   /* มือถือ: ปัดขึ้นลงยังเลื่อนหน้าได้ หยิกสองนิ้วซูมแผนที่ */
 /* ส่วนรองพับเก็บได้ (progressive disclosure): เปิดเมื่ออยากรู้เพิ่ม แผงซ้ายจะได้สั้นลง */
 details.more>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;min-height:32px}
 details.more>summary::-webkit-details-marker{display:none}
@@ -277,7 +282,8 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
   .layers button{flex:none}
   #flag{top:70px!important}
   .zoomer{top:120px}
-  #mapKey{display:none}
+  #mapKey{display:block;left:10px!important;bottom:84px;max-width:200px;padding:6px 8px;font-size:11px}
+  #mapKey .km{display:none}
   #coach{top:60px;left:10px;right:10px;transform:none;max-width:none}
   #bars{height:28px}
 }
@@ -301,7 +307,7 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
       <div class="lvl"><b id="aqNum">—</b><span class="u">ไมโครกรัม<br>ต่อ ลบ.ม.</span><span class="chipL" id="aqChip">—</span></div>
       <div class="adv">
         <div><b>คนทั่วไป</b><span id="advAll">—</span></div>
-        <div><b>กลุ่มเสี่ยง</b><small>เด็ก ผู้สูงอายุ คนท้อง ผู้มีโรคหัวใจ/ปอด</small><span id="advRisk">—</span></div>
+        <div><b>กลุ่มเสี่ยง</b><small>เด็ก ผู้สูงอายุ คนท้อง ผู้มีโรคหอบหืด/ปอด/หัวใจ</small><span id="advRisk">—</span></div>
       </div>
     </div>
 
@@ -350,7 +356,8 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
     <div class="block">
       <div class="lab"><span class="no">02</span><span>สรุปทุกเรื่องในดอกเดียว · ชี้ที่เขตบนแผนที่เพื่อเปลี่ยน</span></div>
       <div class="ov-name"><b id="ovName">ทั้งกรุงเทพ</b><button type="button" id="ovCity" class="ptbtn" hidden>กลับทั้งเมือง</button></div>
-      <canvas id="ovFlower" aria-label="ดอกไม้ข้อมูล ฝุ่น ร้อน ฝน และระดับน้ำ"></canvas>
+      <div class="distpick"><label for="distSel">เลือกเขต</label><select id="distSel"><option value="">ทั้งกรุงเทพ</option></select><button type="button" id="distGo" class="ptbtn">ดู 24 ชม.</button></div>
+      <canvas id="ovFlower" role="img" aria-label="ดอกไม้ข้อมูล ฝุ่น ร้อน ฝน และระดับน้ำ"></canvas>
       <div class="sc-n">กลีบ ม่วง = ฝุ่น · ส้ม = ร้อน · ฟ้า = ฝน · กลีบยาวเลยวงประแดง = เกินระดับเตือน<br><span id="ovRiver" style="color:var(--dim)"></span></div>
     </div>
 
@@ -477,8 +484,8 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
   </aside>
 
   <div id="stage">
-    <canvas id="cv"></canvas>
-    <div class="chip" id="flag">กำลังโหลด</div>
+    <canvas id="cv" tabindex="0" role="img" aria-label="แผนที่ 50 เขตกรุงเทพ · ลูกศรบนคีย์บอร์ดเลื่อนแผนที่ +/− ซูม · ค่ารายเขตอยู่ในแผงข้อมูล (เลือกเขตจากรายการ)"></canvas>
+    <div class="chip" id="flag" role="status">กำลังโหลด</div>
     <div class="zoomer" role="group" aria-label="ซูมแผนที่">
       <button type="button" id="zIn" aria-label="ซูมเข้า">+</button>
       <button type="button" id="zOut" aria-label="ซูมออก">−</button>
@@ -493,22 +500,24 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
       <button type="button" id="lElev" aria-pressed="false"><i style="background:rgb(100,65,35)"></i>ความสูงพื้นที่</button>
       <button type="button" id="lAll" aria-pressed="false">ทั้งหมด</button>
     </div>
-    <button type="button" id="railBtn" class="railbtn" aria-pressed="true">✕ ซ่อนข้อมูล</button>
+    <button type="button" id="railBtn" class="railbtn" aria-expanded="true" aria-controls="rail">✕ ซ่อนข้อมูล</button>
     <!-- legend ย่อของชั้นหลัก วางใกล้แผนที่ (คนไม่ต้องเลื่อนไปหาในแผงซ้าย) -->
-    <div id="mapKey" aria-live="polite"></div>
+    <div id="mapKey"></div>
+    <!-- ข้อความสั้นสำหรับโปรแกรมอ่านหน้าจอ (มองไม่เห็นบนจอ) -->
+    <div id="sr" role="status" class="vh"></div>
     <!-- แนะนำการใช้ครั้งแรก (จำว่าปิดแล้วในเบราว์เซอร์นี้) -->
-    <div id="coach" hidden role="dialog" aria-label="วิธีใช้">
-      <b>อ่านแผนที่นี้ใน 10 วินาที</b>
+    <div id="coach" hidden role="dialog" aria-labelledby="coachT">
+      <b id="coachT">อ่านแผนที่นี้ใน 10 วินาที</b>
       <ol>
         <li>ปุ่มด้านบนคือ "ชั้นข้อมูล" กดเปิด/ปิดได้หลายชั้น ชั้นที่เปิดจะชัด ที่ปิดจะเบลอไปข้างหลัง</li>
-        <li>ชี้ (หรือแตะ) ที่เขตเพื่อดูค่า กดที่เขตเพื่อดูภาพ 24 ชั่วโมง</li>
-        <li>ซูมด้วยลูกกล้องเมาส์ / สองนิ้ว · ส่วนที่มีเครื่องหมาย + ในแผงซ้ายกดเพื่อดูเพิ่ม</li>
+        <li>ชี้หรือแตะที่เขตเพื่อดูค่า · กด (หรือแตะซ้ำ) เพื่อดูภาพ 24 ชั่วโมง · เลือกเขตจากรายการในแผงข้อมูลก็ได้</li>
+        <li>ซูมด้วยลูกกล้องเมาส์ / สองนิ้ว · ส่วนที่มีเครื่องหมาย + ในแผงข้อมูลกดเพื่อดูเพิ่ม</li>
       </ol>
       <button type="button" id="coachOk">เข้าใจแล้ว</button>
     </div>
     <div class="chip" id="dtip" hidden style="pointer-events:none"></div>
     <!-- ภาพเหมือนข้อมูล: เปิดเมื่อกดที่เขต หรือปุ่มภาพรวมกรุงเทพ -->
-    <div id="portrait" hidden>
+    <div id="portrait" hidden role="dialog" aria-modal="true" aria-labelledby="ptName">
       <div class="pt-head">
         <div class="lab">ภาพเหมือนข้อมูล · 24 ชั่วโมงที่ผ่านมา</div>
         <h2 id="ptName">—</h2>
@@ -529,7 +538,7 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
     <div id="day" data-l="pm">
       <div class="hero">
         <div class="lab">PM2.5 เฉลี่ยทั้งเมือง · ตอนนี้</div>
-        <div><b id="heroNum">—</b><span>µg/m³</span></div>
+        <div><b id="heroNum">—</b><span>ไมโครกรัม/ลบ.ม.</span></div>
         <button type="button" id="cityBtn" class="ptbtn">ภาพรวมกรุงเทพ ↗</button>
       </div>
       <div class="strip">
@@ -608,7 +617,7 @@ var data=null,mix=1,picked=-1,scen=null;
 
 function clamp01(v){return v<0?0:v>1?1:v}
 function pmColor(pm){
-  /* หมึกดำต่ำกว่ามาตรฐาน แดงเมื่อถึง 37.5 µg/m³ ตัดขาด ไม่ไล่สี เพื่อให้ "แดง = เกิน" อ่านตรง */
+  /* หมึกดำต่ำกว่ามาตรฐาน แดงเมื่อถึง 37.5 ไมโครกรัม/ลบ.ม. ตัดขาด ไม่ไล่สี เพื่อให้ "แดง = เกิน" อ่านตรง */
   return pmBand(pm).c;
 }
 /* ระดับ PM2.5 ตามสีที่คนไทยคุ้นจาก Air4Thai / กรมควบคุมมลพิษ (เกณฑ์ใหม่ 1 มิ.ย. 2566)
@@ -748,16 +757,19 @@ function invY(y){return BOUNDS.la2-(y-PY)/PS}
 var cityPath2D=null,outlinePath2D=null,riverPath2D=null,gridPts=[],GRID=null,OUTER=[];
 var VIEW={z:1,lonC:null,latC:null,cxs:0,cys:0,dragging:false,moved:0,lx:0,ly:0},AROUND=[];
 /* จังหวัดรอบกรุงเทพ: วาดจางๆ ให้รู้ว่าเมืองต่อกับที่ไหน (data/bkk-around.geojson สร้างด้วย scripts/extract-provinces.ps1) */
-fetch("data/bkk-around.geojson").then(function(r){return r.json()}).then(function(g){
+fetch("data/bkk-around.geojson").then(okJSON).then(function(g){
   AROUND=g.features.map(function(f){
     var lo1=999,lo2=-999,la1=999,la2=-999,polys=f.geometry.type==="MultiPolygon"?f.geometry.coordinates:[f.geometry.coordinates];
     polys.forEach(function(p){p[0].forEach(function(pt){lo1=Math.min(lo1,pt[0]);lo2=Math.max(lo2,pt[0]);la1=Math.min(la1,pt[1]);la2=Math.max(la2,pt[1])})});
     return {th:f.properties.th,geom:f.geometry,path:geoPath(f.geometry),box:[lo1,lo2,la1,la2]};
   });
+  STATIC_DIRTY=true;   /* จังหวัดรอบๆ โหลดเสร็จ วาดพื้นใหม่ */
 }).catch(function(){AROUND=[]});
+/* อ่าน JSON เฉพาะเมื่อบริการตอบว่าสำเร็จ (เช่น โดนจำกัดจำนวนครั้ง 429 จะไม่ถูกอ่านเป็นข้อมูลเพี้ยน) */
+function okJSON(r){if(!r.ok) throw new Error("HTTP "+r.status);return r.json()}
 /* ซูมรอบจุดที่ชี้ ให้ตำแหน่งใต้เมาส์อยู่ที่เดิม */
 var relayoutQueued=false;
-function relayout(){if(relayoutQueued) return;relayoutQueued=true;requestAnimationFrame(function(){relayoutQueued=false;fit();tempDistricts()})}
+function relayout(){if(relayoutQueued) return;relayoutQueued=true;requestAnimationFrame(function(){relayoutQueued=false;fit();tempDistricts();document.body.classList.toggle("zoomed",VIEW.z>1)})}
 function zoomAt(mx,my,f){
   var z2=Math.max(1,Math.min(8,VIEW.z*f));if(z2===VIEW.z) return;
   var glon=invX(mx),glat=invY(my),PS2=PS/VIEW.z*z2;
@@ -891,7 +903,7 @@ function loadDistrictTemps(){
   if(!DIST.length) return;
   var lats=DIST.map(function(d){return d.lat}).join(","),lons=DIST.map(function(d){return d.lon}).join(",");
   fetch("https://api.open-meteo.com/v1/forecast?latitude="+lats+"&longitude="+lons+"&current=temperature_2m,relative_humidity_2m&timezone=Asia%2FBangkok")
-  .then(function(r){return r.json()}).then(function(res){
+  .then(okJSON).then(function(res){
     var A=Array.isArray(res)?res:[res];
     if(A.length<DIST.length) throw new Error("short");
     DIST.forEach(function(d,i){var v=A[i].current&&A[i].current.temperature_2m;d.tLive=(v==null||isNaN(v))?null:v;var hh=A[i].current&&A[i].current.relative_humidity_2m;d.hLive=(hh==null||isNaN(hh))?null:hh});
@@ -907,7 +919,7 @@ function setDistNote(){
     :distLive?("ค่าจาก Open-Meteo ที่จุดกลางแต่ละเขต (แบบจำลอง ไม่ใช่สถานีวัด)"+(n?" · "+n+" เขตไม่มีค่า ใช้ค่าประมาณแทน":""))
     :distLive===false?"ดึงค่ารายเขตไม่สำเร็จ ตอนนี้เป็นค่าประมาณจาก 12 จุด":"กำลังโหลดค่ารายเขต…";
 }
-fetch("data/bkk-districts.geojson").then(function(r){return r.json()}).then(function(g){
+fetch("data/bkk-districts.geojson").then(okJSON).then(function(g){
   DIST=g.features.map(function(f){
     /* ความกว้างของเขต (องศา) ใช้กำหนดขนาดตัวหนังสือ เขตเล็กกลางเมืองจะได้ไม่ทับกัน */
     var lo1=999,lo2=-999,polys=f.geometry.type==="MultiPolygon"?f.geometry.coordinates:[f.geometry.coordinates];
@@ -1076,7 +1088,7 @@ var RAMP={
 
 /* ---------- ความสูงพื้นที่: data/bkk-elevation.json (scripts/extract-elevation.ps1) ---------- */
 var ELEV=null;
-fetch("data/bkk-elevation.json").then(function(r){return r.json()}).then(function(j){
+fetch("data/bkk-elevation.json").then(okJSON).then(function(j){
   /* ทำให้นุ่มด้วยค่าเฉลี่ย 3×3 ลดผลของตึก/ต้นไม้ (ข้อมูลเป็นพื้นผิว DSM) */
   var C=j.cols,R=j.rows,e=j.elev,s=new Array(e.length);
   for(var r=0;r<R;r++)for(var c=0;c<C;c++){
@@ -1130,7 +1142,7 @@ function updateElevBox(){
 var DYN_DIRTY=true;
 function draw(time){
   var a=avg(),k=chaosOf(a);
-  if(STATIC_DIRTY){drawBase();drawHeat();drawElev();drawRain();drawTop(a,k);STATIC_DIRTY=false;DYN_DIRTY=true}
+  if(STATIC_DIRTY){drawBase();drawHeat();drawElev();drawRain();drawTop(a,k);STATIC_DIRTY=false;DYN_DIRTY=true;STATIC_PM_DIRTY=true}
   if(FOCUS.pm||DYN_DIRTY) drawPM(time,k);
   if(FOCUS.water||FOCUS.rain||DYN_DIRTY) drawWaterLv(time);
   DYN_DIRTY=false;
@@ -1227,7 +1239,7 @@ function drawPM(time,k){
     var g=gridPts[i],w=g.w||{x:0,y:0,spd:0},sp=Math.sqrt(w.x*w.x+w.y*w.y);
     var ux=sp?w.x/sp:0,uy=sp?w.y/sp:0,s=((time*sp+g.ph)%g.step+g.step)%g.step-g.step/2;
     var x=g.x+ux*s,y=g.y+uy*s;
-    var pm=pmAtXY(x,y)*(1-rainAt(x,y)*0.6);
+    var pm=pmAtXY(x,y);   /* ไม่เอาฝนสุ่มมาลดฝุ่นแล้ว: ฝุ่นต้องมาจากข้อมูลเท่านั้น */
     var rad=0.7+g.step*0.42*Math.pow(clamp01((pm-10)/70),0.9);
     /* ฝุ่นหนักเกินมาตรฐาน: สั่นหลุดแถวเล็กน้อย (ภาพยุ่งตามข้อมูล) */
     if(pm>37.5){var dj=clamp01((pm-37.5)/60)*g.step*0.5;x+=Math.sin(time*0.6+g.h)*dj;y+=Math.cos(time*0.5+g.h*1.3)*dj}
@@ -1243,29 +1255,50 @@ function drawPM(time,k){
   ctx.strokeStyle=rgb(colA,0.28);ctx.stroke(tA);ctx.strokeStyle=rgb(colB,0.32);ctx.stroke(tB);
   ctx.fillStyle=rgb(colA,0.92);ctx.fill(pA);ctx.fillStyle=rgb(colB,0.95);ctx.fill(pB);
   ctx.restore();
-  ctx.save();ctx.clip(cityPath2D);
-  [[25,rgb(RAMP.pm[2],0.6),[1,3],0.8],[50,rgb(RAMP.pm[3],0.8),[5,3],0.9],[75,rgb(RAMP.pm[4],0.9),[5,3],1],[37.5,rgb(RAMP.pm[4],1),[],2.2]].forEach(function(L){
-    var pth=CONTOURS[L[0]];if(!pth) return;
-    ctx.setLineDash(L[2]);ctx.strokeStyle="rgba(255,255,255,0.85)";ctx.lineWidth=L[3]+2.5;ctx.stroke(pth);
-    ctx.strokeStyle=L[1];ctx.lineWidth=L[3];ctx.stroke(pth);
-  });
-  ctx.setLineDash([]);ctx.restore();
   ctx.fillStyle="rgba(255,255,255,"+(0.6+k*0.35).toFixed(3)+")";
-  for(var m=0;m<motes.length;m++){var mo=motes[m],fade=Math.min(1,mo.age/1.2,(mo.max-mo.age)/1.2);if(fade<=0) continue;ctx.globalAlpha=fade;ctx.fillRect(mo.x,mo.y,mo.s,mo.s)}
+  /* เม็ดฝุ่นลอย: รวมเป็น 4 ระดับความจาง แทนการเปลี่ยนความจางทีละเม็ด */
+  var mp=[new Path2D(),new Path2D(),new Path2D(),new Path2D()];
+  for(var m=0;m<motes.length;m++){var mo=motes[m],fade=Math.min(1,mo.age/1.2,(mo.max-mo.age)/1.2);if(fade<=0) continue;mp[Math.min(3,Math.floor(fade*4))].rect(mo.x,mo.y,mo.s,mo.s)}
+  for(var q=0;q<4;q++){ctx.globalAlpha=(q+1)/4;ctx.fill(mp[q])}
   ctx.globalAlpha=1;
-  /* จุดวัดฝุ่น 12 จุด: สี่เหลี่ยม + ตัวเลข */
+  /* ส่วนที่ไม่ขยับของชั้นฝุ่น (เส้นชั้นค่า จุดอ่านค่า ตัวเลข) วาดไว้ในแผ่นพักครั้งเดียว แล้วแปะทุกเฟรม */
+  if(!PMSTATIC||STATIC_PM_DIRTY) drawPMStatic();
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(PMSTATIC,0,0);ctx.restore();
+}
+var PMSTATIC=null,STATIC_PM_DIRTY=true;
+function drawPMStatic(){
+  if(!PMSTATIC) PMSTATIC=document.createElement("canvas");
+  PMSTATIC.width=cv.width;PMSTATIC.height=cv.height;
+  var g=PMSTATIC.getContext("2d");g.setTransform(DPR,0,0,DPR,0,0);
+  var keep=ctx;ctx=g;
+  /* เส้นชั้นค่า: วาดเฉพาะเมื่อ 12 จุดต่างกันจริง (≥5 ไมโครกรัม) ไม่งั้นเป็นลวดลายที่ข้อมูลไม่มี
+     (แบบจำลอง Open-Meteo ในเอเชียช่องละ ~45 กม. ทั้งเมืองมีแค่ 1–2 ช่อง) */
+  var pms=CUR.map(function(c){return c.pm}),spread=Math.max.apply(null,pms)-Math.min.apply(null,pms);
+  PM_SPREAD=spread;
+  if(spread>=5){
+    ctx.save();ctx.clip(cityPath2D);
+    [[25,rgb(RAMP.pm[2],0.6),[1,3],0.8],[50,rgb(RAMP.pm[3],0.8),[5,3],0.9],[75,rgb(RAMP.pm[4],0.9),[5,3],1],[37.5,rgb(RAMP.pm[4],1),[],2.2]].forEach(function(L){
+      var pth=CONTOURS[L[0]];if(!pth) return;
+      ctx.setLineDash(L[2]);ctx.strokeStyle="rgba(255,255,255,0.85)";ctx.lineWidth=L[3]+2.5;ctx.stroke(pth);
+      ctx.strokeStyle=L[1];ctx.lineWidth=L[3];ctx.stroke(pth);
+    });
+    ctx.setLineDash([]);ctx.restore();
+  }
+  /* จุดอ่านค่า 12 จุด: สี่เหลี่ยม "กลวง" = ค่าจากแบบจำลอง (ทึบ = วัดจริง ใช้กับเครื่องวัดฝน/ระดับน้ำ) */
   var big=W>900;ctx.textBaseline="middle";
   for(var s=0;s<STATIONS.length;s++){
     var st=STATIONS[s],c=CUR[s],on=(s===picked),X=px(st.lon),Y=py(st.lat),sz=on?6:4.5;
-    ctx.fillStyle="#fff";ctx.fillRect(X-sz-1.5,Y-sz-1.5,sz*2+3,sz*2+3);
-    ctx.fillStyle=rgb(pmBand(c.pm).c,1);ctx.fillRect(X-sz,Y-sz,sz*2,sz*2);
+    ctx.fillStyle="rgba(255,255,255,0.9)";ctx.fillRect(X-sz-1.5,Y-sz-1.5,sz*2+3,sz*2+3);
+    ctx.strokeStyle=rgb(RAMP.pm[4],1);ctx.lineWidth=2;ctx.strokeRect(X-sz+1,Y-sz+1,sz*2-2,sz*2-2);
     if(on){ctx.strokeStyle=rgb(INK,1);ctx.lineWidth=1.5;ctx.strokeRect(X-12,Y-12,24,24)}
     ctx.font="700 "+(big?"13px":"11px")+" Epilogue,sans-serif";
-    var t=c.pm.toFixed(0),w=ctx.measureText(t).width,lx=X+sz+4;
-    ctx.fillStyle="rgba(255,255,255,0.92)";ctx.fillRect(lx-2,Y-8,w+5,16);ctx.fillStyle=rgb(INK,1);ctx.textAlign="left";ctx.fillText(t,lx,Y+0.5);
+    var tx=c.pm.toFixed(0),w=ctx.measureText(tx).width,lx=X+sz+4;
+    ctx.fillStyle="rgba(255,255,255,0.92)";ctx.fillRect(lx-2,Y-8,w+5,16);ctx.fillStyle=rgb(INK,1);ctx.textAlign="left";ctx.fillText(tx,lx,Y+0.5);
   }
   ctx.textBaseline="alphabetic";
+  ctx=keep;STATIC_PM_DIRTY=false;
 }
+var PM_SPREAD=99;
 /* ระดับน้ำ = แท่งตั้ง โทนเขียวน้ำทะเล เต็มแท่ง = ถึงตลิ่ง ล้นตลิ่งมีหยดน้ำเด้ง */
 function drawWaterLv(time){
   useLayer("water");ctx.clearRect(0,0,W,H);
@@ -1405,11 +1438,16 @@ function frame(ts){
   /* เดโมเดินตามเวลาจริง แม้เครื่องจะวาดได้ช้า */
   if(scen==="demo") demoStep(Math.min(0.5,raw)*(reduce?0.25:1));
   /* วาดสูงสุด 30 เฟรม/วินาที: งานนี้เคลื่อนช้า ลื่นพอ แต่ใช้แรงครึ่งเดียว */
-  stepCells(dt);stepMotes(dt);
+  stepCells(dt);
   /* ไม่มีใครขยับเมาส์/แตะเกิน 20 วินาที: ลดเหลือ 10 เฟรม/วินาที ประหยัดแรงเครื่องและแบตเตอรี่ */
   var gap=(performance.now()-LAST_INPUT>20000)?100:32;
-  if(ts-(frame.lastDraw||0)>=gap){frame.lastDraw=ts;draw(ts/1000)}
-  drawPortrait(dt);
+  frame.acc=(frame.acc||0)+dt;
+  if(ts-(frame.lastDraw||0)>=gap){
+    frame.lastDraw=ts;var adt=Math.min(0.2,frame.acc);frame.acc=0;
+    /* เปิดภาพ 24 ชม. อยู่: แผนที่ถูกบังเกือบหมด หยุดวาดแผนที่ไว้ก่อน วาดแค่ภาพ 24 ชม. */
+    if(PT.open) drawPortrait(adt);
+    else{stepMotes(adt);draw(ts/1000)}   /* ขยับจุดฝุ่นเฉพาะเฟรมที่วาดจริง */
+  }
   requestAnimationFrame(frame);
 }
 
@@ -1480,7 +1518,7 @@ function refresh(){
   document.getElementById("chaosWord").textContent=words(v);
   var bar=document.getElementById("chaosBar");bar.style.width=pct+"%";bar.style.background=rgb(bd.c,1);
   /* ห้ามให้คำแนะนำสุขภาพจากค่าตัวอย่างโดยไม่บอก */
-  var notReal=scen?" · ค่าจำลอง":liveOK===null?" · กำลังโหลด (ยังไม่ใช่ค่าจริง)":liveOK===false?" · ค่าตัวอย่าง ไม่ใช่ค่าจริง":"";
+  var notReal=scen?" · ค่าจำลอง":mix<1?" · ผสมวันอากาศดี (ไม่ใช่ค่าจริง)":liveOK===null?" · กำลังโหลด (ยังไม่ใช่ค่าจริง)":liveOK===false?" · ค่าตัวอย่าง ไม่ใช่ค่าจริง":"";
   var real=(liveOK===true||scen)?1:0.55;
   /* ฝุ่น: ประโยคหลัก → ระดับ → คำแนะนำ */
   document.getElementById("nowLab").textContent="ฝุ่น PM2.5 ตอนนี้ · "+where+notReal;
@@ -1542,7 +1580,7 @@ function setSky(pm){
 var liveOK=null;
 function setFlag(){
   var f=document.getElementById("flag");
-  var base=liveOK===null?"กำลังโหลด":liveOK?(stale?"ค่าจากรอบก่อน":missing.length?"live · บางจุดใช้ค่าตัวอย่าง":"live · ข้อมูลจริง"):"ค่าตัวอย่าง · ไม่ใช่ค่าจริง";
+  var base=liveOK===null?"กำลังโหลด":liveOK?(stale?"ค่าจากรอบก่อน":missing.length?"สด · บางจุดใช้ค่าตัวอย่าง":"สด · ข้อมูลจริง"):"ค่าตัวอย่าง · ไม่ใช่ค่าจริง";
   var warn=liveOK===false||stale||missing.length>0;
   if(scen==="rain"){base="จำลอง · ฝนหนัก";warn=false}
   if(scen==="smog"){base="จำลอง · ฝุ่นหน้าแล้ง";warn=false}
@@ -1600,9 +1638,9 @@ function renderKey(msg){
   el.innerHTML="<b></b><div class=\"ramp\">"+ramp.map(function(c){return "<i style=\"background:"+rgb(c,1)+"\"></i>"}).join("")+"</div><div class=\"ends\"><span></span><span></span></div><div class=\"km\"></div>";
   el.querySelector("b").textContent=(msg||k[0]);
   var e=el.querySelectorAll(".ends span");e[0].textContent=k[1];e[1].textContent=k[2];
-  el.querySelector(".km").textContent=k[3]+(focusCount()>1?" · อีก "+(focusCount()-1)+" ชั้นเปิดอยู่":"");
+  el.querySelector(".km").textContent=k[3]+(PRIMARY==="pm"&&PM_SPREAD<5?" · ตอนนี้ทั้งเมืองใกล้เคียงกัน แบบจำลองแยกรายเขตได้ไม่ชัด":"")+(focusCount()>1?" · อีก "+(focusCount()-1)+" ชั้นเปิดอยู่":"");
 }
-function flashKey(msg){renderKey(msg);clearTimeout(flashKey.t);flashKey.t=setTimeout(function(){renderKey()},1800)}
+function flashKey(msg){renderKey(msg);document.getElementById("sr").textContent=msg;clearTimeout(flashKey.t);flashKey.t=setTimeout(function(){renderKey()},1800)}
 function layerUI(){
   ALL_LAYERS.forEach(function(k){
     var b=document.getElementById(LAYER_INFO[k].btn);
@@ -1634,7 +1672,7 @@ function renumber(){
 /* ซ่อน/แสดงแผงซ้าย ให้ดูแค่แผนที่ได้ */
 document.getElementById("railBtn").addEventListener("click",function(){
   var hid=document.body.classList.toggle("rail-off");
-  this.setAttribute("aria-pressed",String(!hid));this.textContent=hid?"☰ แสดงข้อมูล":"✕ ซ่อนข้อมูล";
+  this.setAttribute("aria-expanded",String(!hid));this.textContent=hid?"☰ แสดงข้อมูล":"✕ ซ่อนข้อมูล";
   VIEW.lonC=VIEW.lonC;relayout();
 });
 
@@ -1643,6 +1681,18 @@ document.getElementById("railBtn").addEventListener("click",function(){
 var ovEl={hidden:false},OV={sel:null};
 var OV_PM=RAMP.pm[3],OV_HEAT=RAMP.heat[2],OV_RAIN=RAMP.rain[2];
 document.getElementById("ovCity").addEventListener("click",function(){OV.sel=null;OV.lock=false;drawOverview()});
+/* เลือกเขตจากรายการ: ทางเลือกสำหรับคีย์บอร์ด/โปรแกรมอ่านจอ (แผนที่เป็นภาพ กดด้วยเมาส์อย่างเดียวไม่พอ) */
+var distSel=document.getElementById("distSel");
+function fillDistSel(){
+  if(distSel.options.length>1||!DIST.length) return;
+  DIST.map(function(d,i){return {i:i,th:d.th}}).sort(function(a,b){return a.th.localeCompare(b.th,"th")}).forEach(function(o){
+    var op=document.createElement("option");op.value=o.i;op.textContent="เขต"+o.th;distSel.appendChild(op)});
+}
+distSel.addEventListener("change",function(){OV.sel=this.value===""?null:+this.value;drawOverview()});
+document.getElementById("distGo").addEventListener("click",function(){
+  if(OV.sel==null){document.getElementById("cityBtn").click();return}
+  var d=DIST[OV.sel];openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon]);
+});
 function ovValues(){
   var a=avg();
   if(OV.sel==null){
@@ -1653,7 +1703,12 @@ function ovValues(){
   WATER.levels.forEach(function(l){var dx=(l.lon-d.lon)*111*COSL,dy=(l.lat-d.lat)*111,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;near=l}});
   return {name:"เขต"+d.th,pm:d.pm||0,hi:d.hi||0,rain:d.rain24,river:bd<25?near:null,elev:d.elev};
 }
-function drawOverview(){if(CUR.length) drawFlower(ovValues())}
+function drawOverview(){
+  if(!CUR.length) return;fillDistSel();
+  var v=ovValues();drawFlower(v);
+  if(distSel.value!==(OV.sel==null?"":String(OV.sel))) distSel.value=OV.sel==null?"":String(OV.sel);
+  document.getElementById("ovFlower").setAttribute("aria-label",v.name+": ฝุ่น "+v.pm.toFixed(0)+" ไมโครกรัม/ลบ.ม. ("+pmBand(v.pm).name+") · ร้อนที่รู้สึก "+v.hi.toFixed(0)+" องศา ("+hiBand(v.hi).name+") · ฝน 24 ชม. "+(v.rain==null?"ไม่มีข้อมูล":v.rain.toFixed(0)+" มม."));
+}
 /* ดอกไม้ข้อมูล: กลีบ = ค่า เทียบกับวงเตือน (เส้นประ) */
 function drawFlower(v){
   var c=document.getElementById("ovFlower"),g=c.getContext("2d"),r=c.getBoundingClientRect(),w=Math.max(160,r.width),h=Math.max(160,r.height);
@@ -1709,7 +1764,9 @@ var LAST_INPUT=performance.now();
 (function(){
   var seen=false;try{seen=localStorage.getItem("breathes-coach")==="1"}catch(e){}
   var c=document.getElementById("coach");if(!seen) c.hidden=false;
-  document.getElementById("coachOk").addEventListener("click",function(){c.hidden=true;try{localStorage.setItem("breathes-coach","1")}catch(e){}});
+  function done(){c.hidden=true;try{localStorage.setItem("breathes-coach","1")}catch(e){}}
+  document.getElementById("coachOk").addEventListener("click",done);
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!c.hidden) done()});
 })();
 window.addEventListener("pointermove",function(e){
   if(!VIEW.dragging||PINCH.on) return;
@@ -1717,6 +1774,18 @@ window.addEventListener("pointermove",function(e){
   if(VIEW.moved>4){panBy(dx,dy);cv.style.cursor="grabbing"}
 });
 window.addEventListener("pointerup",function(){VIEW.dragging=false;cv.style.cursor=""});
+window.addEventListener("pointercancel",function(){VIEW.dragging=false;cv.style.cursor=""});
+/* คีย์บอร์ดบนแผนที่: ลูกศร = เลื่อน, + / − = ซูม, 0 = กลับขนาดเดิม */
+cv.addEventListener("keydown",function(e){
+  var k=e.key,s=60;
+  if(k==="+"||k==="="){zoomAt(VIEW.cxs,VIEW.cys,1.5)}
+  else if(k==="-"||k==="_"){zoomAt(VIEW.cxs,VIEW.cys,1/1.5)}
+  else if(k==="0"){document.getElementById("zReset").click()}
+  else if(k==="ArrowLeft"){panBy(s,0)}else if(k==="ArrowRight"){panBy(-s,0)}
+  else if(k==="ArrowUp"){panBy(0,s)}else if(k==="ArrowDown"){panBy(0,-s)}
+  else return;
+  e.preventDefault();
+});
 var PINCH={on:false,d:0};
 cv.addEventListener("touchstart",function(e){if(e.touches.length===2){PINCH.on=true;PINCH.d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY)}},{passive:true});
 cv.addEventListener("touchmove",function(e){
@@ -1733,7 +1802,7 @@ cv.addEventListener("click",function(e){
   if(VIEW.moved>4) return;   /* เพิ่งลากแผนที่ ไม่นับเป็นการกด */
   var r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,best=-1,bd=1e9;
   if(FOCUS.pm) STATIONS.forEach(function(s,i){var dx=px(s.lon)-mx,dy=py(s.lat)-my,d=dx*dx+dy*dy;if(d<bd){bd=d;best=i}});
-  if(bd<26*26){picked=best!==picked?best:-1;refresh();return}
+  if(bd<12*12){picked=best!==picked?best:-1;refresh();return}   /* ต้องกดโดนจุดจริงๆ ไม่แย่งการกดเขต */
   /* ไม่ได้กดที่จุดวัด: ถ้ากดในเขต เปิดภาพเหมือนข้อมูลของเขตนั้น
      มือถือไม่มีการชี้ (hover): แตะครั้งแรก = ดูค่าและดอกไม้ของเขต, แตะเขตเดิมอีกครั้ง = เปิดภาพ 24 ชม. */
   for(var i=0;i<DIST.length;i++){
@@ -1759,7 +1828,7 @@ function showTip(mx,my,hint){
   tip.textContent=wt||("เขต"+d.th+(d.elev!=null?" (สูง ~"+d.elev.toFixed(1)+" ม.)":"")+" · ฝุ่น ≈"+(d.pm||0).toFixed(0)+" ("+pmBand(d.pm||0).name+") · ร้อนที่รู้สึก "+(d.hi||0).toFixed(0)+"° ("+hiBand(d.hi||0).name+")"+(d.rain24!=null?" · ฝน 24 ชม. "+d.rain24.toFixed(0)+" มม. (วัดจริง)":"")+(d.est?" · ค่าประมาณ":"")+" · "+(hint||"กดเพื่อดู 24 ชม."));
   tip.style.left=Math.max(8,Math.min(mx+14,r.width-tip.offsetWidth-8))+"px";tip.style.top=(my+14)+"px";tip.hidden=false;
 }
-cv.addEventListener("mouseleave",function(){tip.hidden=true;if(OV.sel!=null){OV.sel=null;drawOverview()}});
+cv.addEventListener("mouseleave",function(){tip.hidden=true});   /* ดอกไม้ค้างเขตล่าสุดไว้ ให้เลื่อนไปอ่านในแผงได้ (กด "กลับทั้งเมือง" เพื่อล้าง) */
 
 /* ---------- ข้อมูลสด ---------- */
 function stamp(){try{return new Date().toLocaleString("th-TH",{timeZone:"Asia/Bangkok",dateStyle:"medium",timeStyle:"short"})}catch(e){return new Date().toISOString()}}
@@ -1773,7 +1842,7 @@ function load(){
   var lats=STATIONS.map(function(s){return s.lat}).join(","),lons=STATIONS.map(function(s){return s.lon}).join(",");
   var aq="https://air-quality-api.open-meteo.com/v1/air-quality?latitude="+lats+"&longitude="+lons+"&current=pm2_5,uv_index&timezone=Asia%2FBangkok";
   var wx="https://api.open-meteo.com/v1/forecast?latitude="+lats+"&longitude="+lons+"&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m&timezone=Asia%2FBangkok";
-  Promise.all([fetch(aq).then(function(r){return r.json()}),fetch(wx).then(function(r){return r.json()})])
+  Promise.all([fetch(aq).then(okJSON),fetch(wx).then(okJSON)])
   .then(function(res){
     var A=Array.isArray(res[0])?res[0]:[res[0]],B=Array.isArray(res[1])?res[1]:[res[1]];
     if(A.length<STATIONS.length||B.length<STATIONS.length) throw new Error("short");
@@ -1808,8 +1877,8 @@ function loadHistory(){
   var lats=STATIONS.map(function(s){return s.lat}).join(","),lons=STATIONS.map(function(s){return s.lon}).join(",");
   var q="latitude="+lats+"&longitude="+lons+"&past_days=1&forecast_days=2&timezone=Asia%2FBangkok";
   Promise.all([
-    fetch("https://air-quality-api.open-meteo.com/v1/air-quality?"+q+"&hourly=pm2_5,uv_index").then(function(r){return r.json()}),
-    fetch("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m").then(function(r){return r.json()}).catch(function(){return null})
+    fetch("https://air-quality-api.open-meteo.com/v1/air-quality?"+q+"&hourly=pm2_5,uv_index").then(okJSON),
+    fetch("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m").then(okJSON).catch(function(){return null})
   ]).then(function(res){
     var A=Array.isArray(res[0])?res[0]:[res[0]],B=res[1]?(Array.isArray(res[1])?res[1]:[res[1]]):null,times=A[0].hourly.time;
     /* ชั่วโมงปัจจุบันตามเวลากรุงเทพ */
@@ -1860,7 +1929,7 @@ function renderDay(rows){
     b.style.height=(r.pm==null?0:r.pm/mx*100).toFixed(1)+"%";
     if(r.pm!=null) b.style.background=rgb(pmBand(r.pm).c,1);
     if(i===rows.length-1) b.className+=" now";
-    b.title=r.t+":00 น. · "+(r.pm==null?"ไม่มีข้อมูล":r.pm.toFixed(1)+" µg/m³");
+    b.title=r.t+":00 น. · "+(r.pm==null?"ไม่มีข้อมูล":r.pm.toFixed(1)+" ไมโครกรัม/ลบ.ม.");
     bars.appendChild(b);
     var t=document.createElement("span");t.textContent=(i%3===0||i===rows.length-1)?r.t:"";hrs.appendChild(t);
   });
@@ -1879,8 +1948,8 @@ function loadWater(){
   var inBox=function(st){return st&&st.tele_station_lat>BOUNDS.la1-0.05&&st.tele_station_lat<BOUNDS.la2+0.05&&st.tele_station_long>BOUNDS.lo1-0.05&&st.tele_station_long<BOUNDS.lo2+0.05};
   var fresh=function(s){return s&&Date.now()-twTime(s)<6*3600*1000};   /* ทิ้งค่าที่เก่ากว่า 6 ชม. (สถานีที่หยุดส่งข้อมูล) */
   Promise.all([
-    fetch(TW+"rain_24h").then(function(r){return r.json()}),
-    fetch(TW+"waterlevel_load").then(function(r){return r.json()})
+    fetch(TW+"rain_24h").then(okJSON),
+    fetch(TW+"waterlevel_load").then(okJSON)
   ]).then(function(res){
     WATER.rain=(res[0].data||[]).filter(function(x){return inBox(x.station)&&fresh(x.rainfall_datetime)&&x.rain_24h!=null}).map(function(x){
       return {name:x.station.tele_station_name.th,amphoe:x.geocode&&x.geocode.amphoe_name.th,prov:x.geocode&&x.geocode.province_code,
@@ -1897,7 +1966,7 @@ function loadWater(){
   }).catch(function(){WATER.ok=false;renderWater()});
   /* พยากรณ์ฝนรายชั่วโมง 12 ชม. ข้างหน้า (กลางเมือง) */
   fetch("https://api.open-meteo.com/v1/forecast?latitude=13.75&longitude=100.52&hourly=precipitation,precipitation_probability&forecast_days=2&timezone=Asia%2FBangkok")
-  .then(function(r){return r.json()}).then(function(j){
+  .then(okJSON).then(function(j){
     var H=j.hourly,now=new Date(Date.now()+7*3600*1000).toISOString().slice(0,13)+":00",i0=H.time.indexOf(now);if(i0<0) i0=0;
     WATER.next=[];for(var i=i0+1;i<=Math.min(H.time.length-1,i0+12);i++) WATER.next.push({t:H.time[i].slice(11,16),mm:H.precipitation[i]||0,p:H.precipitation_probability[i]||0});
     renderWater();
@@ -1967,12 +2036,15 @@ function renderWater(){
   if(PRIMARY==="water"||PRIMARY==="rain") buildRank();
 }
 loadWater();
-setInterval(loadWater,15*60*1000);
-/* ดึงข้อมูลใหม่ทุก 15 นาที ให้หน้าที่เปิดค้างไว้ยังเป็นค่าปัจจุบัน */
-setInterval(function(){stale=false;load();loadDistrictTemps();loadHistory()},15*60*1000);
+/* ดึงข้อมูลใหม่ทุก 15 นาที ให้หน้าที่เปิดค้างไว้ยังเป็นค่าปัจจุบัน
+   แท็บซ่อนอยู่ = ไม่ดึง (ไม่เปลืองเน็ต/โควตาบริการข้อมูล) · กลับมาดูแท็บแล้วข้อมูลเก่าเกิน 15 นาที = ดึงทันที */
+var LAST_FETCH=Date.now();
+function refreshAll(){LAST_FETCH=Date.now();stale=false;load();loadDistrictTemps();loadHistory();loadWater()}
+setInterval(function(){if(!document.hidden) refreshAll()},15*60*1000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&Date.now()-LAST_FETCH>15*60*1000) refreshAll()});
 
 snapshot();
-window.addEventListener("resize",function(){fit()});
+var RESIZE_T=0;window.addEventListener("resize",function(){clearTimeout(RESIZE_T);RESIZE_T=setTimeout(fit,120)});   /* รอปรับขนาดเสร็จค่อยคำนวณใหม่ครั้งเดียว */
 fit();refresh();load();layerUI();
 requestAnimationFrame(frame);
 
@@ -1995,8 +2067,8 @@ function fetchSeries(lats,lons){
   if(PT.cache[key]&&Date.now()-PT.cache[key].at<15*60*1000) return Promise.resolve(PT.cache[key].d);
   var q="latitude="+lats.join(",")+"&longitude="+lons.join(",")+"&past_days=1&forecast_days=1&timezone=Asia%2FBangkok";
   return Promise.all([
-    fetch("https://air-quality-api.open-meteo.com/v1/air-quality?"+q+"&hourly=pm2_5").then(function(r){return r.json()}),
-    fetch("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m").then(function(r){return r.json()})
+    fetch("https://air-quality-api.open-meteo.com/v1/air-quality?"+q+"&hourly=pm2_5").then(okJSON),
+    fetch("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m").then(okJSON)
   ]).then(function(res){
     var A=Array.isArray(res[0])?res[0]:[res[0]],B=Array.isArray(res[1])?res[1]:[res[1]];
     var times=B[0].hourly.time,now=new Date(Date.now()+7*3600*1000).toISOString().slice(0,13)+":00";
@@ -2021,7 +2093,8 @@ function openPortrait(name,sub,lats,lons){
   PT.open=true;PT.data=null;PT.name=name;PT.failed=false;
   document.getElementById("ptName").textContent=name;
   document.getElementById("ptSub").textContent=sub+" · กำลังโหลด 24 ชั่วโมงที่ผ่านมา…";
-  ptEl.hidden=false;sizePortrait();
+  if(!PT.open||ptEl.hidden) PT.back=document.activeElement;   /* จำไว้ คืนโฟกัสตอนปิด */
+  ptEl.hidden=false;sizePortrait();document.getElementById("ptClose").focus();
   /* Open-Meteo ฝั่งอากาศอาจใช้ ~5–10 วินาที ถ้าเกิน 30 วินาทีบอกผู้ชมแทนการค้างหน้าโหลดไว้เฉยๆ */
   var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error("timeout"))},30000)});
   Promise.race([fetchSeries(lats,lons),timeout]).then(function(d){
@@ -2030,7 +2103,7 @@ function openPortrait(name,sub,lats,lons){
     var last=d[d.length-1],vals=d.filter(function(x){return x.pm!=null});
     var over=vals.filter(function(x){return x.pm>=37.5}).length;
     var mean=vals.reduce(function(s,x){return s+x.pm},0)/(vals.length||1);
-    document.getElementById("ptSub").textContent=sub+" · เฉลี่ย 24 ชม. "+mean.toFixed(1)+" µg/m³ · เกินมาตรฐาน "+over+" ชม. · ค่าจริงรายชั่วโมง (แบบจำลอง Open-Meteo)";
+    document.getElementById("ptSub").textContent=sub+" · เฉลี่ย 24 ชม. "+mean.toFixed(1)+" ไมโครกรัม/ลบ.ม. · เกินมาตรฐาน "+over+" ชม. · ค่าจริงรายชั่วโมง (แบบจำลอง Open-Meteo)";
   }).catch(function(){
     if(!PT.open||PT.name!==name) return;
     /* บอกว่าเกิดอะไร + ทางแก้ในปุ่มเดียว (Nielsen: ช่วยให้กู้คืนจากข้อผิดพลาดได้) */
@@ -2040,7 +2113,14 @@ function openPortrait(name,sub,lats,lons){
     PT.failed=true;
   });
 }
-function closePortrait(){PT.open=false;ptEl.hidden=true}
+function closePortrait(){PT.open=false;ptEl.hidden=true;if(PT.back&&PT.back.focus) PT.back.focus();PT.back=null}
+/* กด Tab ในภาพ 24 ชม. วนอยู่ในหน้าต่างนี้ ไม่หลุดไปแผนที่ข้างหลัง */
+ptEl.addEventListener("keydown",function(e){
+  if(e.key!=="Tab") return;
+  var f=[].slice.call(ptEl.querySelectorAll("button,[href],select,input,[tabindex]:not([tabindex=\"-1\"])")).filter(function(x){return x.offsetParent!==null});
+  if(!f.length) return;var a=f[0],z=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus()}else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus()}
+});
 document.getElementById("ptClose").addEventListener("click",closePortrait);
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&PT.open) closePortrait()});
 document.getElementById("cityBtn").addEventListener("click",function(){
@@ -2154,7 +2234,7 @@ function drawPortrait(dt){
   var lb=pmBand(last.pm||0);
   c.fillStyle=rgb(INK,1);c.font="600 "+Math.round(R*0.2)+"px Epilogue,sans-serif";
   c.fillText((last.pm==null?"—":last.pm.toFixed(0)),cx,cy-R*0.04);
-  c.font="600 10px Epilogue,sans-serif";c.fillStyle=rgb(INK,0.8);c.fillText("µg/m³ ตอนนี้",cx,cy+R*0.09);
+  c.font="600 10px Epilogue,sans-serif";c.fillStyle=rgb(INK,0.8);c.fillText("ไมโครกรัม/ลบ.ม. ตอนนี้",cx,cy+R*0.09);
   c.font="700 11px 'IBM Plex Sans Thai',sans-serif";c.fillStyle=rgb(lb.c,1);c.fillText(lb.name,cx,cy+R*0.17);
   /* ป้ายบนวงมาตรฐาน */
   c.font="600 10px Epilogue,sans-serif";c.fillStyle=rgb(RED,1);c.fillText("37.5",cx+Math.cos(-Math.PI/4)*rPM(37.5)+14,cy+Math.sin(-Math.PI/4)*rPM(37.5)-6);
