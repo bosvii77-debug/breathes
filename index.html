@@ -161,7 +161,9 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .lyr{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:blur(var(--blur,3.5px));opacity:.32;transition:filter .45s ease,opacity .45s ease}
 .lyr.on,.lyr.base{filter:none;opacity:1}
 #cv{position:relative;z-index:3}
-.lyr,#cv{transform-origin:0 0}
+.lyr,#cv,#basemap{transform-origin:0 0}
+#basemap{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .4s}
+#basemap.on{opacity:1}
 #osm{position:absolute;right:8px;bottom:3px;white-space:nowrap;z-index:10;font-size:10px;color:rgba(11,11,20,.7);background:rgba(255,255,255,.55);padding:1px 5px;border-radius:3px}
 #osm a{color:inherit}   /* ซูม/เลื่อนระหว่างนิ้วขยับ ยืดภาพจากมุมซ้ายบน */
 /* ปุ่มและแผงบนแผนที่ต้องอยู่เหนือแผ่นบนสุดเสมอ ไม่งั้นจะกดไม่ได้ */
@@ -794,7 +796,7 @@ function relayout(){if(relayoutQueued) return;relayoutQueued=true;requestAnimati
    ระหว่างนิ้ว/เมาส์ยังขยับ: ไม่วาดใหม่ แค่ยืด/เลื่อนภาพเดิมด้วย CSS transform (เร็วมาก ไม่มีจังหวะภาพหาย)
    หยุดขยับ 0.15 วินาที: คำนวณแผนที่ใหม่ครั้งเดียว แล้ววาดทันทีในจังหวะเดียวกัน ภาพจึงไม่กะพริบ */
 var GEST=null,GEST_T=0;
-function stackTransform(t){LAYER_ORDER.forEach(function(id){LYR[id].c.style.transform=t});cv.style.transform=t}
+function stackTransform(t){LAYER_ORDER.forEach(function(id){LYR[id].c.style.transform=t});cv.style.transform=t;if(ML_DIV) ML_DIV.style.transform=t}
 function viewOf(){
   /* ใช้ขนาดตามเลย์เอาต์ (offsetWidth) ไม่ใช่ขนาดบนจอ เพราะระหว่างซูม canvas ถูกยืดด้วย CSS transform */
   var W2=Math.max(320,cv.offsetWidth),H2=Math.max(280,cv.offsetHeight);
@@ -875,6 +877,7 @@ function fit(keep){
     }
   }
   if(!keep){motes=[];cells=[]}
+  syncBase();
   sizeLayers();
   buildField();
 }
@@ -1244,8 +1247,49 @@ function osmPaths(){
   }
   OSMP=P;return P;
 }
+/* ---------- แผนที่พื้นหลังสำเร็จรูป: OpenFreeMap "Positron" (ฟรี ไม่ต้องใช้คีย์ ไม่จำกัดจำนวนครั้ง) ----------
+   วาดด้วย MapLibre (WebGL) ใต้ชั้นข้อมูลทั้งหมด แล้วซิงก์ตำแหน่ง/ซูมให้ตรงกับแผนที่ของเรา
+   ซ่อนตัวหนังสือของแผนที่ (ใช้ชื่อเขตภาษาไทยของเราแทน ไม่ซ้อนกัน)
+   โหลดไม่ได้ (ออฟไลน์/ถูกบล็อก) → ใช้แผนที่ที่วาดเองจาก data/bkk-osm.json แทนโดยอัตโนมัติ
+   ความต่างของเส้นโครงแผนที่ (Web Mercator กับของเรา) ในกรุงเทพไม่ถึง 1 พิกเซล เพราะซิงก์ที่จุดกลางจอ */
+var ML=null,ML_OK=false,ML_DIV=null;
+(function(){
+  ML_DIV=document.createElement("div");ML_DIV.id="basemap";ML_DIV.setAttribute("aria-hidden","true");
+  var st=document.getElementById("stage");st.insertBefore(ML_DIV,st.firstChild);
+  var css=document.createElement("link");css.rel="stylesheet";css.href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.css";document.head.appendChild(css);
+  var s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/4.7.1/maplibre-gl.min.js";
+  s.onload=function(){
+    try{
+      /* ตัดชั้นตัวหนังสือ/ไอคอนออกก่อนโหลด: ไม่ต้องโหลดฟอนต์และไอคอน เปิดเร็วขึ้น */
+      fetch("https://tiles.openfreemap.org/styles/positron").then(okJSON).then(function(st){
+        st.layers=st.layers.filter(function(l){return l.type!=="symbol"});delete st.sprite;delete st.glyphs;
+        ML=new maplibregl.Map({container:ML_DIV,style:st,interactive:false,attributionControl:false,
+          pixelRatio:Math.min(window.devicePixelRatio||1,1.5),fadeDuration:0,center:[100.56,13.74],zoom:10});
+        /* พร้อมทันทีที่รูปแบบแผนที่โหลดเสร็จ (ไม่รอทุกแผ่น ซึ่งอาจนานเกิน 20 วินาที) แผ่นแผนที่ค่อยๆ เติมเข้ามาเอง */
+        ML.once("styledata",function(){ML_OK=true;ML_DIV.classList.add("on");syncBase();STATIC_DIRTY=true;mapCredit()});
+      }).catch(function(){ML=null});
+    }catch(e){ML=null}
+  };
+  document.head.appendChild(s);
+})();
+function syncBase(){
+  if(!ML||!ML_OK) return;
+  if(ML_DIV.clientWidth!==syncBase.w||ML_DIV.clientHeight!==syncBase.h){syncBase.w=ML_DIV.clientWidth;syncBase.h=ML_DIV.clientHeight;ML.resize()}
+  ML.jumpTo({center:[invX(W/2),invY(H/2)],zoom:Math.log(PS*COSL*360/512)/Math.LN2});
+  if(ML.redraw) ML.redraw();   /* วาดทันทีในจังหวะเดียวกับชั้นข้อมูล ภาพจะไม่กระตุกตอนปล่อยนิ้ว */
+}
+function mapCredit(){
+  document.getElementById("osm").innerHTML=ML_OK?
+    'แผนที่ © <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> © <a href="https://www.openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · ข้อมูล © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>':
+    'ถนน คลอง ราง © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ผู้ร่วมสร้าง OpenStreetMap</a>';
+}
 function drawBase(){
   useLayer("base");ctx.clearRect(0,0,W,H);
+  if(ML_OK){
+    /* มีแผนที่ Positron อยู่ข้างใต้แล้ว: ฝ้านอกเมืองให้จางลง เมืองเด่นขึ้น (แนวแผนที่ Lima) แล้วข้ามไปวาดเส้นเขต */
+    ctx.save();ctx.fillStyle="rgba(255,255,255,0.42)";ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation="destination-out";ctx.fillStyle="#000";ctx.fill(cityPath2D);ctx.restore();
+  }else{
   ctx.fillStyle=MAPC.land;ctx.fillRect(0,0,W,H);
   ctx.fillStyle=MAPC.city;ctx.fill(cityPath2D);
   var P=osmPaths();
@@ -1258,6 +1302,7 @@ function drawBase(){
     [["t",0.45,2],["s",0.75,3],["p",1.1,4.5],["m",1.7,6.5]].forEach(function(r){ctx.strokeStyle=MAPC.road;ctx.lineWidth=Math.min(r[2],r[1]*zf);ctx.stroke(P[r[0]])});
     ctx.setLineDash([3,3]);ctx.strokeStyle=MAPC.rail;ctx.lineWidth=0.8;ctx.stroke(P.rail);ctx.setLineDash([]);
     ctx.restore();
+  }
   }
   if(AROUND.length){
     ctx.save();
@@ -1510,6 +1555,7 @@ window.BREATHES_CHECK=function(){
   var flag=document.getElementById("flag").textContent,live=liveOK===true;
   add("ข้อมูลฝุ่น/อากาศ",live||/ตัวอย่าง|จำลอง|สมมุติ|กำลังโหลด/.test(flag),live?"ค่าจริง (Open-Meteo)":"ไม่ใช่ค่าจริง · ป้ายบอก: "+flag,!live);
   add("ข้อมูลฝน/ระดับน้ำ",WATER.ok===true,WATER.ok?("สถานีฝน "+WATER.rain.length+" · ระดับน้ำ "+WATER.levels.length):"ยังไม่ได้/ดึงไม่สำเร็จ",true);
+  add("แผนที่พื้นหลัง",ML_OK,ML_OK?"Positron (OpenFreeMap)":"ใช้แผนที่ที่วาดเองแทน (Positron ยังไม่โหลด/ถูกบล็อก)",true);
   add("ข้อมูลความสูงพื้นที่",!!ELEV,ELEV?"โหลดแล้ว (DSM รวมตึก มีป้ายบอก)":"ยังไม่ได้/โหลดไม่สำเร็จ",true);
   /* 6.5) หน้าต่างภาพ 24 ชม. ต้องไม่ถูกอะไรบัง (เปิดชั่วคราวโดยไม่ดึงข้อมูล แล้วปิดคืน) */
   var wasHidden=ptEl.hidden;ptEl.hidden=false;document.body.classList.add("pt-open");
