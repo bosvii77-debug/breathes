@@ -192,6 +192,7 @@ body.pt-open #portrait{z-index:25!important}   /* เหนือแถบรา
 .ov-name{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ov-name b{font-size:22px;font-weight:700}
 .ov-name .ptbtn{margin:0}
+#mapKey .ramp i.sea{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.85) 0 1.2px,transparent 1.2px 5px)}   /* ลายขีด = เท่าหรือต่ำกว่าระดับน้ำทะเล (ตรงกับบนแผนที่) */
 .cnum{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#111;color:#fff;font:700 10px/1 Epilogue,sans-serif;margin-right:5px;vertical-align:1px}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .distpick{display:flex;gap:6px;align-items:center;margin:6px 0 2px;font-size:12px;color:var(--dim)}
@@ -714,7 +715,11 @@ function chip(el,band,extra){
   var L=0.299*band.c[0]+0.587*band.c[1]+0.114*band.c[2];el.style.color=L>150?"#111":"#fff";
 }
 /* สีความสูง: ต่ำ = น้ำตาลเข้ม สูง = ทรายอ่อน (0–8 ม.) */
-function elevColor(e){var R=[[70,40,20],[100,65,35],[130,90,55],[160,120,80],[185,150,110]];return R[Math.max(0,Math.min(4,Math.floor(e/2)))]}
+/* ความสูงพื้นที่: ขั้นละ 1 ม. ต่ำ = น้ำตาลเข้ม → สูง = ทรายอ่อน (แบบแผนที่ภูมิประเทศ) · ขั้นแรก = เท่าหรือต่ำกว่าระดับน้ำทะเล */
+var ELEV_COLS=[[48,26,12],[86,52,26],[120,82,46],[154,114,72],[187,150,106],[215,188,148],[238,225,200]];
+var ELEV_NAMES=["≤0","1","2","3","4","5","6+"];
+function elevBand(e){return e<=0.5?0:e<1.5?1:e<2.5?2:e<3.5?3:e<4.5?4:e<5.5?5:6}
+function elevColor(e){return ELEV_COLS[elevBand(e)]}
 var INK=[11,11,20],NAVY=[27,31,94],RED=[232,65,60],BLUE=[29,78,216],PAPER="#ffffff";
 /* อุณหภูมิ: เย็นฟ้า → ปกติสีกระดาษ → ร้อนส้ม ตามแบบแผนที่อากาศทั่วไป (ไม่ใช้แดง เพราะแดง = ฝุ่นเกิน) */
 var TEMP_STOPS=[[24,[196,220,238]],[28,[243,241,236]],[32,[250,220,170]],[36,[245,180,110]],[40,[232,140,70]]];
@@ -1120,7 +1125,7 @@ var RAMP={
   heat: [[255,232,196],[255,190,110],[245,130,40],[205,60,40],[120,20,40]],         /* ส้ม→แดงเข้ม */
   rain: [[214,234,252],[150,200,245],[70,140,225],[30,80,190],[20,35,120]],         /* ฟ้า→น้ำเงิน */
   water:[[205,240,235],[140,215,205],[40,170,160],[0,110,110],[0,60,70]],           /* เขียวน้ำทะเล */
-  elev: [[70,40,20],[100,65,35],[130,90,55],[160,120,80],[185,150,110]]          /* น้ำตาลแบบเส้นชั้นความสูง (ต่ำ=เข้ม) */
+  elev: ELEV_COLS                                                                /* น้ำตาล ต่ำ=เข้ม → สูง=อ่อน (7 ขั้น ทีละ 1 ม.) */
 };
 
 /* ---------- ความสูงพื้นที่: data/bkk-elevation.json (scripts/extract-elevation.ps1) ---------- */
@@ -1133,7 +1138,17 @@ fetch("data/bkk-elevation.json").then(okJSON).then(function(j){
     for(var dr=-1;dr<=1;dr++)for(var dc=-1;dc<=1;dc++){var rr=r+dr,cc=c+dc;if(rr<0||cc<0||rr>=R||cc>=C) continue;sum+=e[rr*C+cc];n++}
     s[r*C+c]=sum/n;
   }
-  ELEV={lo1:j.lo1,la2:j.la2,step:j.step,C:C,R:R,v:s,levels:[]};
+  ELEV={lo1:j.lo1,la2:j.la2,step:j.step,C:C,R:R,v:s,levels:[],below:[]};
+  /* สีพื้น: ขยายกริด 6 เท่า (เฉลี่ยถ่วงระหว่างจุด) จากค่าดิบ แล้วแบ่งสีเป็นขั้นละ 1 ม. ขอบขั้นจึงโค้งตามจริง ไม่เป็นบล็อก */
+  var K=6,IW=(C-1)*K+1,IH=(R-1)*K+1,ic=document.createElement("canvas");ic.width=IW;ic.height=IH;
+  var ig=ic.getContext("2d"),im=ig.createImageData(IW,IH);
+  for(var y=0;y<IH;y++){var rr=y/K,r0=Math.min(R-2,Math.floor(rr)),fr=rr-r0;
+    for(var x=0;x<IW;x++){var cc=x/K,c0=Math.min(C-2,Math.floor(cc)),fc=cc-c0;
+      var v=(e[r0*C+c0]*(1-fc)+e[r0*C+c0+1]*fc)*(1-fr)+(e[(r0+1)*C+c0]*(1-fc)+e[(r0+1)*C+c0+1]*fc)*fr;
+      var col=elevColor(v),o=(y*IW+x)*4;im.data[o]=col[0];im.data[o+1]=col[1];im.data[o+2]=col[2];im.data[o+3]=255}}
+  ig.putImageData(im,0,0);ELEV.img=ic;
+  /* จุดที่ค่าดิบเท่าหรือต่ำกว่าระดับน้ำทะเล (ช่องละ ~1 ตร.กม.) */
+  for(var r2=0;r2<R;r2++)for(var c2=0;c2<C;c2++) if(e[r2*C+c2]<=0) ELEV.below.push([j.lo1+c2*j.step,j.la2-r2*j.step]);
   var mx=Math.max.apply(null,s);
   for(var lv=1;lv<=Math.min(12,Math.ceil(mx));lv+=1) ELEV.levels.push(lv);
   ELEV.segs=ELEV.levels.map(function(lv){return elevContour(lv)});
@@ -1167,8 +1182,10 @@ function updateElevBox(){
   var es=DIST.filter(function(d){return d.elev!=null}).sort(function(a,b){return a.elev-b.elev});
   if(!es.length) return;
   var med=es[Math.floor(es.length/2)].elev;
-  document.getElementById("elevNum").textContent=med.toFixed(1);
-  document.getElementById("elevHead").textContent="ต่ำสุดที่เขต"+es[0].th+" ~"+es[0].elev.toFixed(1)+" ม. · สูงสุดที่เขต"+es[es.length-1].th+" ~"+es[es.length-1].elev.toFixed(1)+" ม.";
+  /* ปัดเป็นเมตรเต็ม: ข้อมูลช่องละ ~1 กม. แม่นยำไม่ถึงทศนิยม */
+  document.getElementById("elevNum").textContent="~"+Math.round(med);
+  var nb=0;if(ELEV&&ELEV.below) ELEV.below.forEach(function(b){if(TOPCTX.isPointInPath(cityPath2D,px(b[0])*DPR,py(b[1])*DPR)) nb++});
+  document.getElementById("elevHead").textContent="ต่ำสุดที่เขต"+es[0].th+" ~"+Math.round(es[0].elev)+" ม. · สูงสุดที่เขต"+es[es.length-1].th+" ~"+Math.round(es[es.length-1].elev)+" ม."+(nb?" · ราว "+Math.round(nb*1.2)+" ตร.กม. เท่าหรือต่ำกว่าระดับน้ำทะเล (ลายขีดบนแผนที่)":"");
 }
 
 /* ---------- วาดทุกชั้น ---------- */
@@ -1324,22 +1341,34 @@ function drawHeat(){
   useLayer("heat");ctx.clearRect(0,0,W,H);
   DIST.forEach(function(d){ctx.fillStyle=rgb(hiBand(d.hi||0).c,0.7);ctx.fill(d.path)});
 }
-/* ความสูงพื้นที่ = เส้นชั้นความสูงสีน้ำตาล ต่ำ=เข้ม/หนา + ตัวเลขกำกับ */
+/* ความสูงพื้นที่ แบบแผนที่ภูมิประเทศ (hypsometric tint):
+   สีพื้นไล่น้ำตาล ต่ำ = เข้ม → สูง = ทรายอ่อน (ทีละ 1 ม.) · ลายขีดขาว = เท่าหรือต่ำกว่าระดับน้ำทะเล
+   เส้นขาวบางทุก 1 ม. (แนวแผนที่ภูมิประเทศ) · ค่ามาจากแบบจำลองพื้นผิว (รวมตึก/ต้นไม้) จึงสูงกว่าพื้นดินจริง */
 function drawElev(){
   useLayer("elev");ctx.clearRect(0,0,W,H);
-  if(!ELEV||!ELEV.segs) return;
+  if(!ELEV||!ELEV.img) return;
+  var x0=px(ELEV.lo1),y0=py(ELEV.la2),x1=px(ELEV.lo1+(ELEV.C-1)*ELEV.step),y1=py(ELEV.la2-(ELEV.R-1)*ELEV.step);
   ctx.save();ctx.clip(cityPath2D);
-  var n=ELEV.levels.length;
+  ctx.globalAlpha=0.92;ctx.imageSmoothingEnabled=true;ctx.drawImage(ELEV.img,x0,y0,x1-x0,y1-y0);ctx.globalAlpha=1;
+  /* ต่ำกว่า/เท่าระดับน้ำทะเล: ลายขีดขาวทับช่องละ ~1 ตร.กม. */
+  if(ELEV.below.length){
+    if(!drawElev.pat){var pc=document.createElement("canvas");pc.width=pc.height=7;var pg=pc.getContext("2d");pg.strokeStyle="rgba(255,255,255,0.8)";pg.lineWidth=1.2;pg.beginPath();pg.moveTo(0,7);pg.lineTo(7,0);pg.stroke();drawElev.pat=ctx.createPattern(pc,"repeat")}
+    var hs=ELEV.step/2,bp=new Path2D();
+    ELEV.below.forEach(function(b){var X0=px(b[0]-hs),X1=px(b[0]+hs),Y0=py(b[1]+hs),Y1=py(b[1]-hs);bp.rect(X0,Y0,X1-X0,Y1-Y0)});
+    ctx.fillStyle=drawElev.pat;ctx.fill(bp);
+  }
+  /* เส้นชั้นความสูงสีขาวบางๆ ทุก 1 ม. + ตัวเลขกำกับห่างๆ */
+  ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=0.8;
   ELEV.levels.forEach(function(lv,i){
-    var t=n>1?i/(n-1):0,col=RAMP.elev[Math.min(4,Math.round(t*4))];
-    ctx.strokeStyle=rgb(col,0.95);ctx.lineWidth=lv<=2?2.4:1.3;ctx.beginPath();
+    ctx.beginPath();
     ELEV.segs[i].forEach(function(s){ctx.moveTo(px(s[0][0]),py(s[0][1]));ctx.lineTo(px(s[1][0]),py(s[1][1]))});
     ctx.stroke();
-    /* ตัวเลขกำกับเส้น (ทุกๆ ราว 25 ส่วน) */
-    ctx.font="600 10px Epilogue,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  });
+  ctx.font="600 10px Epilogue,sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  ELEV.levels.forEach(function(lv,i){
     ELEV.segs[i].forEach(function(s,j){
-      if(j%25) return;var x=px(s[0][0]),y=py(s[0][1]);
-      ctx.lineWidth=3;ctx.strokeStyle="rgba(255,255,255,0.9)";ctx.strokeText(lv+" ม.",x,y);ctx.fillStyle=rgb(col,1);ctx.fillText(lv+" ม.",x,y);
+      if(j%30) return;var x=px(s[0][0]),y=py(s[0][1]);
+      ctx.lineWidth=3;ctx.strokeStyle=rgb(elevColor(lv),1);ctx.strokeText(lv+" ม.",x,y);ctx.fillStyle="#fff";ctx.fillText(lv+" ม.",x,y);
     });
   });
   ctx.restore();
@@ -1471,7 +1500,7 @@ function drawLabels(k){
   ctx.textAlign="center";
   DIST.forEach(function(d){
     var X=px(d.lon),Y=py(d.lat);
-    var val=PRIMARY==="heat"?(d.hi||0).toFixed(0)+"°":PRIMARY==="rain"&&d.rain24!=null?d.rain24.toFixed(0)+" มม.":PRIMARY==="elev"&&d.elev!=null?d.elev.toFixed(1)+" ม.":"";
+    var val=PRIMARY==="heat"?(d.hi||0).toFixed(0)+"°":PRIMARY==="rain"&&d.rain24!=null?d.rain24.toFixed(0)+" มม.":PRIMARY==="elev"&&d.elev!=null?"~"+Math.round(d.elev)+" ม.":"";
     var bwPx=d.bw*PS*COSL,f2=Math.max(8.5,Math.min(fs,bwPx/4.2));
     ctx.font="600 "+f2+"px 'IBM Plex Sans Thai',sans-serif";
     var w=ctx.measureText(d.th).width,h=f2+3,hh=val?h*2-2:h,best=null;
@@ -1610,7 +1639,7 @@ function buildRank(){
   if(PRIMARY==="elev"){
     var de=DIST.filter(function(d){return d.elev!=null}).sort(function(a,b){return a.elev-b.elev}).slice(0,12);
     mx=Math.max(6,de.length?de[de.length-1].elev:0);std=1;lab="12 เขตที่ต่ำที่สุด · สูงจากระดับทะเล (ม.)";note="ต่ำ = น้ำไหลมารวมและระบายยากกว่า · ค่าจากแบบจำลองพื้นผิว รวมความสูงตึก/ต้นไม้ · กดชื่อเขตเพื่อดู 24 ชม.";
-    rows=de.map(function(d){return {lon:d.lon,lat:d.lat,n:d.th,v:d.elev,txt:d.elev.toFixed(1),c:elevColor(d.elev),on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
+    rows=de.map(function(d){return {lon:d.lon,lat:d.lat,n:d.th,v:d.elev,txt:"~"+Math.round(d.elev),c:elevColor(d.elev),on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
     if(!de.length) note=ELEV===false?"โหลดข้อมูลความสูงไม่สำเร็จ":"กำลังโหลด…";
   }else if(PRIMARY==="rain"){
     var dr=DIST.filter(function(d){return d.rain24!=null}).sort(function(a,b){return b.rain24-a.rain24}).slice(0,12);
@@ -1754,7 +1783,7 @@ var LAYER_INFO={
   heat:{btn:"lHeat",sub:"สีพื้นแต่ละเขตคือความร้อนที่ร่างกายรู้สึก (อุณหภูมิรวมความชื้น) ส้มอ่อน = สบาย แดงเข้ม = อันตราย"},
   rain:{btn:"lRain",sub:"ลายเฉียงสีน้ำเงินคือฝน 24 ชม. ที่วัดจริงในแต่ละเขต ยิ่งถี่ยิ่งฝนมาก วงกลม = เครื่องวัดฝน"},
   water:{btn:"lWater",sub:"แท่งตั้งคือระดับน้ำในคลองและแม่น้ำ เต็มแท่ง = น้ำถึงขอบตลิ่ง ค่าวัดจริงจาก ThaiWater"},
-  elev:{btn:"lElev",sub:"เส้นสีน้ำตาลคือความสูงของพื้นที่จากระดับทะเล เส้นเข้ม = พื้นที่ต่ำ น้ำไหลมารวมและระบายยากกว่า"}
+  elev:{btn:"lElev",sub:"สีน้ำตาลคือความสูงจากระดับน้ำทะเล ยิ่งเข้มยิ่งต่ำ น้ำไหลมารวมและระบายยาก · ลายขีดขาว = เท่าหรือต่ำกว่าระดับน้ำทะเล"}
 };
 var ALL_LAYERS=["pm","heat","rain","water","elev"];
 function focusCount(){return ALL_LAYERS.filter(function(k){return FOCUS[k]}).length}
@@ -1775,12 +1804,12 @@ var KEY_TEXT={
   heat:["ร้อนที่ร่างกายรู้สึก","ปกติ","อันตรายมาก","สีพื้นเขต · ชี้เพื่อดู °C"],
   rain:["ฝน 24 ชม. (วัดจริง)","เล็กน้อย","หนักมาก","ลายเฉียงถี่ = ฝนมาก · วงกลม = เครื่องวัด"],
   water:["ระดับน้ำเทียบตลิ่ง","น้ำน้อย","ล้นตลิ่ง","แท่งเต็ม = น้ำถึงขอบตลิ่ง"],
-  elev:["ความสูงพื้นที่","ต่ำ","สูง","เส้นละ 1 ม. · เส้นเข้ม = ที่ต่ำ น้ำขังง่าย"]
+  elev:["ความสูงพื้นที่ เหนือระดับน้ำทะเล","≤0 ม.","6+ ม.","น้ำตาลเข้ม = ต่ำ น้ำขังง่าย · ลายขีดขาว = เท่าหรือต่ำกว่าระดับน้ำทะเล · เส้นขาวทุก 1 ม. · ค่ารวมความสูงตึก/ต้นไม้ พื้นดินจริงต่ำกว่านี้"]
 };
 function renderKey(msg){
   var k=KEY_TEXT[PRIMARY],ramp=RAMP[PRIMARY];if(!k) return;
   var el=document.getElementById("mapKey");
-  el.innerHTML="<b></b><div class=\"ramp\">"+ramp.map(function(c){return "<i style=\"background:"+rgb(c,1)+"\"></i>"}).join("")+"</div><div class=\"ends\"><span></span><span></span></div><div class=\"km\"></div>";
+  el.innerHTML="<b></b><div class=\"ramp\">"+ramp.map(function(c,i){return "<i"+(PRIMARY==="elev"&&i===0?" class=\"sea\"":"")+" style=\"background-color:"+rgb(c,1)+"\"></i>"}).join("")+"</div><div class=\"ends\"><span></span><span></span></div><div class=\"km\"></div>";
   el.querySelector("b").textContent=(msg||k[0]);
   var e=el.querySelectorAll(".ends span");e[0].textContent=k[1];e[1].textContent=k[2];
   el.querySelector(".km").textContent=k[3]+" · ①②③ = "+(PRIMARY==="elev"?"ต่ำสุด":"สูงสุด")+" 3 อันดับ (ดูรายการในแผงซ้าย)"+(PRIMARY==="pm"&&PM_SPREAD<5?" · ตอนนี้ทั้งเมืองใกล้เคียงกัน แบบจำลองแยกรายเขตได้ไม่ชัด":"")+(focusCount()>1?" · อีก "+(focusCount()-1)+" ชั้นเปิดอยู่":"");
