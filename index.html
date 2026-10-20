@@ -158,11 +158,10 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 /* แผงซ้ายแสดงเฉพาะเรื่องเดียวกับชั้นแผนที่ */
 .off{display:none!important}
 /* ชั้นแผนที่: ชั้นที่ไม่ได้เลือกเบลอแต่ยังเห็นสีของตัวเอง */
-.lyr{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:blur(var(--blur,3.5px));opacity:.55;transition:filter .45s ease,opacity .45s ease}
+.lyr{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:blur(var(--blur,3.5px));opacity:.32;transition:filter .45s ease,opacity .45s ease}
 .lyr.on,.lyr.base{filter:none;opacity:1}
 #cv{position:relative;z-index:3}
 .lyr,#cv{transform-origin:0 0}
-.zoomer .zbase{width:auto;font-size:11px;padding:0 8px;font-family:var(--font-th)}
 #osm{position:absolute;right:8px;bottom:3px;white-space:nowrap;z-index:10;font-size:10px;color:rgba(11,11,20,.7);background:rgba(255,255,255,.55);padding:1px 5px;border-radius:3px}
 #osm a{color:inherit}   /* ซูม/เลื่อนระหว่างนิ้วขยับ ยืดภาพจากมุมซ้ายบน */
 /* ปุ่มและแผงบนแผนที่ต้องอยู่เหนือแผ่นบนสุดเสมอ ไม่งั้นจะกดไม่ได้ */
@@ -191,6 +190,7 @@ body.pt-open #portrait{z-index:25!important}   /* เหนือแถบรา
 .ov-name{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ov-name b{font-size:22px;font-weight:700}
 .ov-name .ptbtn{margin:0}
+.cnum{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:#111;color:#fff;font:700 10px/1 Epilogue,sans-serif;margin-right:5px;vertical-align:1px}
 .vh{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .distpick{display:flex;gap:6px;align-items:center;margin:6px 0 2px;font-size:12px;color:var(--dim)}
 .distpick select{flex:1;min-width:0;font:inherit;font-size:13px;padding:6px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink)}
@@ -233,7 +233,7 @@ details.more>summary::after{content:"+";margin-left:auto;font-size:16px;font-wei
 details.more[open]>summary::after{content:"−"}
 details.more:not([open]){padding-bottom:8px}
 /* legend ย่อบนแผนที่ (ใกล้ข้อมูล) ของชั้นหลัก */
-#mapKey{position:absolute;left:calc(360px + var(--u)*2);bottom:150px;z-index:10;background:var(--glass-strong);border:1px solid var(--edge);border-radius:4px;padding:8px 10px;font-size:11.5px;line-height:1.35;max-width:260px}
+#mapKey{position:absolute;left:calc(360px + var(--u)*2);bottom:150px;z-index:10;background:#fff;border:1px solid rgba(17,17,17,.18);border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:8px 10px;font-size:11.5px;line-height:1.35;max-width:260px}
 #mapKey b{display:block;font-size:12px;margin-bottom:4px}
 #mapKey .ramp{display:flex;height:10px;border-radius:2px;overflow:hidden;margin:4px 0 2px}
 #mapKey .ramp i{flex:1}
@@ -507,7 +507,6 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
       <button type="button" id="zIn" aria-label="ซูมเข้า">+</button>
       <button type="button" id="zOut" aria-label="ซูมออก">−</button>
       <button type="button" id="zReset" aria-label="กลับมุมมองทั้งเมือง" title="กลับมุมมองทั้งเมือง">⟲</button>
-      <button type="button" id="zBase" class="zbase" aria-label="สลับแผนที่ฐาน" title="สลับแผนที่ฐาน: แผนที่ / ดาวเทียม">ดาวเทียม</button>
     </div>
     <!-- ชั้นข้อมูล: เลือกได้หลายชั้น ชั้นที่เลือกคม ที่เหลือเบลอ (สีจุดหน้าปุ่ม = สีของชั้นนั้น) -->
     <div class="layers" role="group" aria-label="ชั้นข้อมูลบนแผนที่ เลือกได้หลายชั้น">
@@ -523,7 +522,7 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
     <div id="mapKey"></div>
     <!-- มือถือ: คำตอบสั้นๆ บนแผนที่ ไม่ต้องเลื่อนลงไปหา (แตะ = ไปดูรายละเอียดด้านล่าง) -->
     <button type="button" id="mapSum" aria-label="สรุปค่าอากาศ แตะเพื่อดูรายละเอียด"></button>
-    <div id="osm">แผนที่ฐาน © <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a> · Maxar · OpenStreetMap</div>
+    <div id="osm">ถนน คลอง ราง © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ผู้ร่วมสร้าง OpenStreetMap</a></div>
     <!-- ข้อความสั้นสำหรับโปรแกรมอ่านหน้าจอ (มองไม่เห็นบนจอ) -->
     <div id="sr" role="status" class="vh"></div>
     <!-- แนะนำการใช้ครั้งแรก (จำว่าปิดแล้วในเบราว์เซอร์นี้) -->
@@ -1114,7 +1113,7 @@ function useLayer(id){ctx=id?LYR[id].g:TOPCTX}
 
 /* ---------- โทนสีของแต่ละชั้น (ไล่อ่อน→เข้ม) ---------- */
 var RAMP={
-  pm:   [[233,216,251],[201,166,242],[160,106,224],[122,60,196],[75,26,138]],      /* ม่วง */
+  pm:   [[196,170,236],[168,128,228],[140,90,212],[110,52,186],[72,24,132]],       /* ม่วง (อ่อนสุดเข้มขึ้น ให้เห็นบนพื้นแผนที่เทา) */
   heat: [[255,232,196],[255,190,110],[245,130,40],[205,60,40],[120,20,40]],         /* ส้ม→แดงเข้ม */
   rain: [[214,234,252],[150,200,245],[70,140,225],[30,80,190],[20,35,120]],         /* ฟ้า→น้ำเงิน */
   water:[[205,240,235],[140,215,205],[40,170,160],[0,110,110],[0,60,70]],           /* เขียวน้ำทะเล */
@@ -1178,7 +1177,6 @@ var DYN_DIRTY=true;
 function draw(time){
   var a=avg(),k=chaosOf(a);
   if(STATIC_DIRTY){drawBase();drawHeat();drawElev();drawRain();drawTop(a,k);STATIC_DIRTY=false;DYN_DIRTY=true;STATIC_PM_DIRTY=true}
-  if(TILE_DIRTY&&!GEST){TILE_DIRTY=false;drawBase()}   /* แผ่นแผนที่ฐานเพิ่งโหลดเสร็จ วาดพื้นใหม่เฉพาะชั้นฐาน */
   if(FOCUS.pm||DYN_DIRTY) drawPM(time,k);
   if(FOCUS.water||FOCUS.rain||DYN_DIRTY) drawWaterLv(time);
   DYN_DIRTY=false;
@@ -1187,91 +1185,94 @@ function draw(time){
 function drawTop(a,k){
   useLayer(null);ctx.clearRect(0,0,W,H);
   /* ขอบเมือง + แม่น้ำ: จุดยึดสายตา อยู่บนสุดเสมอ ไม่เบลอ */
-  ctx.save();ctx.lineWidth=2;ctx.strokeStyle="#ffffff";ctx.lineJoin="round";ctx.stroke(outlinePath2D||cityPath2D);
+  /* ขอบเมืองเส้นเข้ม (พื้นแผนที่สว่างแล้ว เส้นขาวมองไม่เห็น) · แม่น้ำเส้นหยาบ Natural Earth ใช้เฉพาะตอนยังไม่มีข้อมูล OSM */
+  ctx.save();ctx.lineWidth=1.4;ctx.strokeStyle="rgba(40,40,50,0.85)";ctx.lineJoin="round";ctx.stroke(outlinePath2D||cityPath2D);
+  if(!OSM){
   /* แม่น้ำเป็นเส้นหยาบ (Natural Earth) ซูมลึกแล้วไม่ให้หนาเกินจนบังแผนที่ฐาน */
   ctx.lineCap="round";ctx.lineWidth=Math.min(7,Math.max(3,PXPERKM*0.55));ctx.strokeStyle=PAPER;ctx.stroke(riverPath2D);
-  ctx.lineWidth=Math.min(4.5,Math.max(2,PXPERKM*0.4));ctx.strokeStyle=rgb(BLUE,1);ctx.stroke(riverPath2D);ctx.restore();
+  ctx.lineWidth=Math.min(4.5,Math.max(2,PXPERKM*0.4));ctx.strokeStyle=rgb(BLUE,1);ctx.stroke(riverPath2D);}
+  ctx.restore();
   drawLabels(k);
+  drawCallouts();
   drawFurniture(a);
 }
-/* ---------- แผนที่ฐานละเอียด: Esri (ไม่ต้องใช้คีย์) สลับได้ 2 แบบ: แผนที่ถนนสีเทาอ่อน / ภาพดาวเทียม ----------
-   (CARTO เปลี่ยนเป็นต้องใช้คีย์แล้ว ลองเมื่อ 20 ต.ค. 2569 ขึ้น "API KEY REQUIRED")
-   ดึงเป็นแผ่นสี่เหลี่ยม (tile) เฉพาะส่วนที่เห็น ระดับความละเอียดตามการซูม
-   ระหว่างรอแผ่นละเอียด ใช้แผ่นหยาบที่โหลดแล้วยืดแทน ภาพจึงไม่ว่างตอนซูม
-   ถ้าโหลดไม่ได้ (ออฟไลน์/ถูกบล็อก) หน้าเว็บยังใช้ได้เหมือนเดิม แค่ไม่มีถนน */
-var TILES={},TILE_N=0,TILE_DIRTY=false,TILE_OK=0;
-var ESRI="https://server.arcgisonline.com/ArcGIS/rest/services/";
-var BASEMAPS={
-  map:{name:"แผนที่",url:ESRI+"Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",max:16,alpha:0.75,veil:0.18},
-  sat:{name:"ดาวเทียม",url:ESRI+"World_Imagery/MapServer/tile/{z}/{y}/{x}",max:18,alpha:0.9,veil:0.18}
-};
-var BASE="sat";try{BASE=localStorage.getItem("breathes-base")==="map"?"map":"sat"}catch(e){}   /* ค่าเริ่มต้น = ดาวเทียม (แนว Zoom Earth) */
-function tLon(x,z){return x/Math.pow(2,z)*360-180}
-function tLat(y,z){var n=Math.PI-2*Math.PI*y/Math.pow(2,z);return 180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)))}
-function lonT(lon,z){return (lon+180)/360*Math.pow(2,z)}
-function latT(lat,z){var r=lat*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z)}
-function getTile(z,x,y,load){
-  var k=BASE+"/"+z+"/"+x+"/"+y,t=TILES[k];
-  if(!t&&load){
-    t=TILES[k]={img:new Image(),ok:false,used:0};TILE_N++;
-    t.img.onload=function(){t.ok=true;TILE_OK++;TILE_DIRTY=true};
-    t.img.onerror=function(){t.bad=true};
-    t.img.src=BASEMAPS[BASE].url.replace("{z}",z).replace("{x}",x).replace("{y}",y);
-  }
-  if(t) t.used=performance.now();
-  return t;
-}
-function tileRange(z){
-  return {x0:Math.floor(lonT(invX(0),z)),x1:Math.floor(lonT(invX(W),z)),y0:Math.floor(latT(invY(0),z)),y1:Math.floor(latT(invY(H),z))};
-}
-function drawTiles(){
-  var bm=BASEMAPS[BASE],z=Math.round(Math.log(PS*COSL*DPR*360/256)/Math.LN2);z=Math.max(9,Math.min(bm.max,z));
-  /* แผ่นหยาบ (3 ระดับต่ำกว่า) โหลดไว้เป็นพื้นสำรอง จำนวนน้อยมาก */
-  var zc=Math.max(9,z-3),rc=tileRange(zc);
-  for(var cy=rc.y0;cy<=rc.y1;cy++)for(var cx=rc.x0;cx<=rc.x1;cx++) getTile(zc,cx,cy,true);
-  var rg=tileRange(z);
-  ctx.save();ctx.globalAlpha=bm.alpha;
-  for(var ty=rg.y0;ty<=rg.y1;ty++)for(var tx=rg.x0;tx<=rg.x1;tx++){
-    var X0=Math.floor(px(tLon(tx,z))),X1=Math.ceil(px(tLon(tx+1,z))),Y0=Math.floor(py(tLat(ty,z))),Y1=Math.ceil(py(tLat(ty+1,z)));
-    var t=getTile(z,tx,ty,true);
-    if(t.ok){ctx.drawImage(t.img,X0,Y0,X1-X0,Y1-Y0);continue}
-    for(var d=1;d<=5;d++){
-      var pt=getTile(z-d,tx>>d,ty>>d,false);
-      if(pt&&pt.ok){var sz=pt.img.naturalWidth/(1<<d);ctx.drawImage(pt.img,(tx-((tx>>d)<<d))*sz,(ty-((ty>>d)<<d))*sz,sz,sz,X0,Y0,X1-X0,Y1-Y0);break}
-    }
-  }
+var CALLOUTS=[];
+function drawCallouts(){
+  ctx.save();ctx.textAlign="center";ctx.textBaseline="middle";
+  CALLOUTS.forEach(function(c,i){
+    if(c.lon==null) return;
+    var X=px(c.lon),Y=py(c.lat);if(X<-40||X>W+40||Y<-40||Y>H+40) return;
+    /* วงเรือง = บริเวณที่ค่าสูง (สีของชั้นนั้น จางออกขอบ) */
+    var R=Math.max(16,Math.min(90,2.4*PXPERKM)),g=ctx.createRadialGradient(X,Y,0,X,Y,R);
+    g.addColorStop(0,rgb(c.c,0.5));g.addColorStop(1,rgb(c.c,0));
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(X,Y,R,0,6.2832);ctx.fill();
+    /* หมายเลข: วงกลมดำ ขอบขาว อยู่เหนือชื่อเขตเล็กน้อย ไม่ทับตัวหนังสือ */
+    var bx=X,by=Y-17;
+    ctx.fillStyle="#111";ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.beginPath();ctx.arc(bx,by,9,0,6.2832);ctx.fill();ctx.stroke();
+    ctx.fillStyle="#fff";ctx.font="700 11px Epilogue,sans-serif";ctx.fillText(String(i+1),bx,by+0.5);
+  });
   ctx.restore();
-  /* เก็บแผ่นที่ใช้ล่าสุดไว้ไม่เกิน ~300 แผ่น */
-  if(TILE_N>400){
-    var ks=Object.keys(TILES).sort(function(a,b){return TILES[a].used-TILES[b].used});
-    ks.slice(0,ks.length-300).forEach(function(k){delete TILES[k]});TILE_N=Object.keys(TILES).length;
+}
+/* ---------- แผนที่ฐานแบบกราฟิก (แนวแผนที่ผังเมือง: Lima / Groningen / walkability maps) ----------
+   ไม่ใช้ภาพถ่ายจริง: พื้นเทาอ่อน · ในเมืองสว่างกว่าเล็กน้อย · ถนนขาวหนาตามขนาดถนน · คลอง/แม่น้ำเทาฟ้า · รางรถไฟเส้นประ
+   ข้อมูล © ผู้ร่วมสร้าง OpenStreetMap ดึงครั้งเดียวด้วย scripts/extract-osm.ps1 → data/bkk-osm.json แล้ววาดเอง
+   (ไม่ติดคีย์/โควตาของผู้ให้บริการแผนที่ และเปิดผ่าน claude.ai ได้เพราะเป็นไฟล์ในโปรเจกต์) */
+var MAPC={land:"#e4e3dd",city:"#efeee9",road:"#ffffff",water:"#c9d7dd",canal:"#b7c9d1",rail:"#8a8a86",dist:"rgba(50,50,60,0.20)",prov:"rgba(50,50,60,0.38)",provTxt:"rgba(50,50,60,0.55)"};
+var OSM=null,OSMP=null;
+fetch("data/bkk-osm.json").then(okJSON).then(function(j){
+  /* ถอดพิกัด (เก็บแบบต่างจากจุดก่อนหน้า) + กรอบของแต่ละเส้น ไว้ข้ามเส้นที่อยู่นอกจอ */
+  function dec(list){return list.map(function(a){
+    var o=new Float64Array(a.length),x=0,y=0,b=[999,-999,999,-999];
+    for(var i=0;i<a.length;i+=2){x+=a[i];y+=a[i+1];var lo=x/j.s,la=y/j.s;o[i]=lo;o[i+1]=la;if(lo<b[0])b[0]=lo;if(lo>b[1])b[1]=lo;if(la<b[2])b[2]=la;if(la>b[3])b[3]=la}
+    o.box=b;return o})}
+  OSM={m:dec(j.roads.m),p:dec(j.roads.p),s:dec(j.roads.s),t:dec(j.roads.t),river:dec(j.rivers),canal:dec(j.canals),rail:dec(j.rail)};
+  OSMP=null;STATIC_DIRTY=true;
+}).catch(function(){OSM=null});
+/* แปลงเส้นเป็น Path2D ตามมุมมองปัจจุบัน (ทำใหม่เฉพาะตอนซูม/เลื่อน ไม่ใช่ทุกเฟรม) */
+function osmPaths(){
+  if(!OSM) return null;
+  var key=PS.toFixed(3)+"|"+PX.toFixed(1)+"|"+PY.toFixed(1)+"|"+W+"x"+H;
+  if(OSMP&&OSMP.key===key) return OSMP;
+  var lo1=invX(-40),lo2=invX(W+40),la1=invY(H+40),la2=invY(-40),P={key:key};
+  for(var k in OSM){
+    var path=new Path2D();
+    OSM[k].forEach(function(a){
+      var b=a.box;if(b[1]<lo1||b[0]>lo2||b[3]<la1||b[2]>la2) return;
+      path.moveTo(px(a[0]),py(a[1]));for(var i=2;i<a.length;i+=2) path.lineTo(px(a[i]),py(a[i+1]));
+    });
+    P[k]=path;
   }
+  OSMP=P;return P;
 }
 function drawBase(){
   useLayer("base");ctx.clearRect(0,0,W,H);
-  drawTiles();
-  ctx.save();ctx.strokeStyle="rgba(255,255,255,0.22)";ctx.lineWidth=1;ctx.beginPath();
-  for(var lo=Math.ceil(BOUNDS.lo1*10)/10;lo<=BOUNDS.lo2;lo+=0.1){var gx=Math.round(px(lo))+0.5;ctx.moveTo(gx,PY);ctx.lineTo(gx,PY+MH)}
-  for(var la=Math.ceil(BOUNDS.la1*10)/10;la<=BOUNDS.la2;la+=0.1){var gy=Math.round(py(la))+0.5;ctx.moveTo(PX,gy);ctx.lineTo(PX+MW,gy)}
-  ctx.stroke();ctx.restore();
+  ctx.fillStyle=MAPC.land;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=MAPC.city;ctx.fill(cityPath2D);
+  var P=osmPaths();
+  if(P){
+    var zf=Math.sqrt(VIEW.z);
+    ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+    /* น้ำก่อน แล้วถนนทับ (เหมือนแผนที่ผังเมือง: สะพานข้ามคลอง) */
+    ctx.strokeStyle=MAPC.canal;ctx.lineWidth=Math.min(3,0.55*zf);ctx.stroke(P.canal);
+    ctx.strokeStyle=MAPC.water;ctx.lineWidth=Math.max(2.5,Math.min(60,0.33*PXPERKM));ctx.stroke(P.river);   /* เจ้าพระยากว้างราว 300–400 ม. */
+    [["t",0.45,2],["s",0.75,3],["p",1.1,4.5],["m",1.7,6.5]].forEach(function(r){ctx.strokeStyle=MAPC.road;ctx.lineWidth=Math.min(r[2],r[1]*zf);ctx.stroke(P[r[0]])});
+    ctx.setLineDash([3,3]);ctx.strokeStyle=MAPC.rail;ctx.lineWidth=0.8;ctx.stroke(P.rail);ctx.setLineDash([]);
+    ctx.restore();
+  }
   if(AROUND.length){
     ctx.save();
-    AROUND.forEach(function(p){ctx.fillStyle="rgba(255,255,255,0.10)";ctx.fill(p.path)});
-    ctx.setLineDash([4,4]);ctx.strokeStyle="rgba(255,255,255,0.55)";ctx.lineWidth=1;
+    ctx.setLineDash([5,4]);ctx.strokeStyle=MAPC.prov;ctx.lineWidth=0.9;
     AROUND.forEach(function(p){ctx.stroke(p.path)});ctx.setLineDash([]);
-    ctx.font="600 13px 'IBM Plex Sans Thai',sans-serif";ctx.textAlign="center";ctx.fillStyle="rgba(255,255,255,0.8)";
+    ctx.font="600 12px 'IBM Plex Sans Thai',sans-serif";ctx.textAlign="center";ctx.fillStyle=MAPC.provTxt;
     AROUND.forEach(function(p){
       var lon=(p.box[0]+p.box[1])/2,lat=(p.box[2]+p.box[3])/2,cl=(BOUNDS.lo1+BOUNDS.lo2)/2,ca=(BOUNDS.la1+BOUNDS.la2)/2;
       var X=px(lon*0.55+cl*0.45),Y=py(lat*0.55+ca*0.45);
-      if(X>0&&X<W&&Y>0&&Y<H&&!ctx.isPointInPath(cityPath2D,X*DPR,Y*DPR)) ctx.fillText(p.th,X,Y);
+      if(X>0&&X<W&&Y>0&&Y<H&&!ctx.isPointInPath(cityPath2D,X*DPR,Y*DPR)) ctx.fillText("จ."+p.th,X,Y);
     });
     ctx.restore();
   }
-  /* พื้นเมืองขาวฝ้า + เส้นเขตจางๆ */
-  if(DIST.length){
-    DIST.forEach(function(d){ctx.fillStyle="rgba(255,255,255,"+(TILE_OK?BASEMAPS[BASE].veil:0.45)+")";ctx.fill(d.path)});   /* มีแผนที่ฐาน: ฝ้าน้อยลงให้เห็นถนน */
-    ctx.strokeStyle="rgba(27,31,94,0.22)";ctx.lineWidth=1;DIST.forEach(function(d){ctx.stroke(d.path)});
-  }else{ctx.fillStyle="rgba(255,255,255,0.45)";ctx.fill(cityPath2D)}
+  /* เส้นเขตบางๆ */
+  if(DIST.length){ctx.strokeStyle=MAPC.dist;ctx.lineWidth=0.8;DIST.forEach(function(d){ctx.stroke(d.path)})}
 }
 /* ความร้อน = สีพื้นเขต โทนส้ม→แดงเข้ม */
 function drawHeat(){
@@ -1443,30 +1444,30 @@ function drawLabels(k){
 }
 
 function drawFurniture(a){
+  /* มาตราส่วน + ทิศเหนือ + ลม แบบแผนที่ผังเมือง: เกาะกับจอ ไม่เกาะกับเมือง (ซูมแล้วยังเห็น)
+     คอม: มุมขวาบนใต้ป้ายสถานะ · มือถือ: มุมซ้ายล่างเหนือคำอธิบายสี */
   ctx.save();
-  ctx.font="500 12px Epilogue,sans-serif";ctx.fillStyle=rgb(INK,1);
-  ctx.strokeStyle=rgb(INK,1);ctx.lineWidth=1;
-  /* มาตราส่วน: แถบขาวดำสลับ */
-  var len=10*PXPERKM,x0=PX,y0=Math.min(PY+MH+20,H-(W>=760?130:80));
-  for(var q=0;q<2;q++){
-    ctx.fillStyle=q?PAPER:rgb(INK,1);ctx.fillRect(x0+q*len/2,y0-4,len/2,4);
-  }
-  ctx.strokeRect(x0+0.5,y0-4.5,len,4);
-  ctx.fillStyle=rgb(INK,1);ctx.fillText("0",x0,y0+12);ctx.fillText("10 กม.",x0+len-14,y0+12);
-  /* ลม */
-  var wx=PX+MW-(W<600?110:140),wy=y0-2,rad=(270-a.wd)*Math.PI/180,L=14;
+  var mob=W<760,km=[1,2,5,10,20].find(function(k){return k*PXPERKM>=70})||20,len=km*PXPERKM;
+  var x0=mob?14:W-62-len,y0=mob?H-196:74;
+  ctx.fillStyle="rgba(255,255,255,0.75)";ctx.fillRect(x0-6,y0-16,len+(mob?64:58),36);
+  ctx.strokeStyle=rgb(INK,1);ctx.fillStyle=rgb(INK,1);ctx.lineWidth=1;
+  for(var q=0;q<2;q++){ctx.fillStyle=q?"#fff":rgb(INK,1);ctx.fillRect(x0+q*len/2,y0,len/2,4)}
+  ctx.strokeRect(x0+0.5,y0+0.5,len,4);
+  ctx.fillStyle=rgb(INK,1);ctx.font="500 11px Epilogue,sans-serif";ctx.textAlign="left";
+  ctx.fillText("0",x0-2,y0-4);ctx.textAlign="right";ctx.fillText(km+" กม.",x0+len+2,y0-4);
+  /* ทิศเหนือ ข้างมาตราส่วน */
+  var nx=x0+len+(mob?30:28),ny=y0+2;
+  ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(nx,ny+10);ctx.lineTo(nx,ny-6);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(nx-4,ny-1);ctx.lineTo(nx,ny-9);ctx.lineTo(nx+4,ny-1);ctx.closePath();ctx.fill();
+  ctx.textAlign="center";ctx.font="600 10px 'IBM Plex Mono',monospace";ctx.fillText("N",nx,ny+19);
+  /* ลม: ลูกศรตามทิศที่ลมพัดไป */
+  var wx=mob?24:x0-150,wy=mob?y0-34:y0+2,rad=(270-a.wd)*Math.PI/180,L=12;
+  ctx.fillStyle="rgba(255,255,255,0.75)";ctx.fillRect(wx-16,wy-14,(mob?118:124),28);
   var sx=wx-Math.cos(rad)*L,sy=wy+Math.sin(rad)*L,ex=wx+Math.cos(rad)*L,ey=wy-Math.sin(rad)*L;
-  ctx.lineWidth=1.5;
+  ctx.strokeStyle=rgb(INK,1);ctx.fillStyle=rgb(INK,1);ctx.lineWidth=1.5;
   ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(ex,ey);
-  ctx.lineTo(ex-Math.cos(rad-0.5)*7,ey+Math.sin(rad-0.5)*7);
-  ctx.lineTo(ex-Math.cos(rad+0.5)*7,ey+Math.sin(rad+0.5)*7);ctx.closePath();ctx.fill();
-  ctx.fillText("ลม "+a.ws.toFixed(0)+" กม./ชม.",wx+22,wy+4);
-  /* ทิศเหนือ */
-  var nx=W-30,ny=64;
-  ctx.beginPath();ctx.moveTo(nx,ny+12);ctx.lineTo(nx,ny-6);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(nx-4,ny-1);ctx.lineTo(nx,ny-8);ctx.lineTo(nx+4,ny-1);ctx.closePath();ctx.fill();
-  ctx.font="600 11px 'IBM Plex Mono',monospace";ctx.fillText("N",nx-3.5,ny+26);
+  ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex-Math.cos(rad-0.5)*6,ey+Math.sin(rad-0.5)*6);ctx.lineTo(ex-Math.cos(rad+0.5)*6,ey+Math.sin(rad+0.5)*6);ctx.closePath();ctx.fill();
+  ctx.textAlign="left";ctx.font="500 12px 'IBM Plex Sans Thai',sans-serif";ctx.fillText("ลม "+a.ws.toFixed(0)+" กม./ชม.",wx+18,wy+4);
   ctx.restore();
 }
 
@@ -1563,27 +1564,29 @@ function buildRank(){
   if(PRIMARY==="elev"){
     var de=DIST.filter(function(d){return d.elev!=null}).sort(function(a,b){return a.elev-b.elev}).slice(0,12);
     mx=Math.max(6,de.length?de[de.length-1].elev:0);std=1;lab="12 เขตที่ต่ำที่สุด · สูงจากระดับทะเล (ม.)";note="ต่ำ = น้ำไหลมารวมและระบายยากกว่า · ค่าจากแบบจำลองพื้นผิว รวมความสูงตึก/ต้นไม้ · กดชื่อเขตเพื่อดู 24 ชม.";
-    rows=de.map(function(d){return {n:d.th,v:d.elev,txt:d.elev.toFixed(1),c:elevColor(d.elev),on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
+    rows=de.map(function(d){return {lon:d.lon,lat:d.lat,n:d.th,v:d.elev,txt:d.elev.toFixed(1),c:elevColor(d.elev),on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
     if(!de.length) note=ELEV===false?"โหลดข้อมูลความสูงไม่สำเร็จ":"กำลังโหลด…";
   }else if(PRIMARY==="rain"){
     var dr=DIST.filter(function(d){return d.rain24!=null}).sort(function(a,b){return b.rain24-a.rain24}).slice(0,12);
     mx=Math.max(40,dr.length?dr[0].rain24:0);std=35;lab="12 เขตที่ฝนตกมากที่สุด · 24 ชม. (มม.)";note="เส้นตั้ง = 35 มม. ฝนหนัก · ค่าวัดจริงจากเครื่องวัดในเขต · กดชื่อเขตเพื่อดู 24 ชม.";
-    rows=dr.map(function(d){return {n:d.th,v:d.rain24,txt:d.rain24.toFixed(0),c:rainBand(d.rain24).c,on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
+    rows=dr.map(function(d){return {lon:d.lon,lat:d.lat,n:d.th,v:d.rain24,txt:d.rain24.toFixed(0),c:rainBand(d.rain24).c,on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
     if(!dr.length) note=WATER.ok===false?"ดึงข้อมูลไม่สำเร็จ":"กำลังโหลด…";
   }else if(PRIMARY==="heat"){
     var ds=DIST.filter(function(d){return d.hi!=null}).sort(function(a,b){return b.hi-a.hi}).slice(0,12);
     mx=Math.max(45,ds.length?ds[0].hi:0);std=33;lab="12 เขตที่ร้อนที่สุด · ร้อนที่รู้สึก °C";note="เส้นตั้ง = 33° ระดับเตือนภัย · กดชื่อเขตเพื่อดู 24 ชม."+(ds[0]&&ds[0].est?" · ค่าประมาณ":"");
-    rows=ds.map(function(d){return {n:d.th,v:d.hi,txt:d.hi.toFixed(0)+"°",c:hiBand(d.hi).c,on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
+    rows=ds.map(function(d){return {lon:d.lon,lat:d.lat,n:d.th,v:d.hi,txt:d.hi.toFixed(0)+"°",c:hiBand(d.hi).c,on:false,act:function(){openPortrait("เขต"+d.th,"จุดกลางเขต",[d.lat],[d.lon])}}});
   }else if(PRIMARY==="water"){
     var ls=WATER.levels.slice().sort(function(a,b){return b.pct-a.pct}).slice(0,12);
     mx=Math.max(120,ls.length?ls[0].pct:0);std=100;lab="ระดับน้ำ เทียบความสูงตลิ่ง (%)";note="เส้นตั้ง = ขอบตลิ่ง (100%) · ข้อมูลจริงจาก ThaiWater";
-    rows=ls.map(function(l){return {n:l.river.replace("แม่น้ำ","").replace("คลอง","ค.")+" · "+l.name,v:l.pct,txt:l.pct.toFixed(0)+"%",c:wlBand(l.pct).c,on:false,act:null}});
+    rows=ls.map(function(l){return {lon:l.lon,lat:l.lat,n:l.river.replace("แม่น้ำ","").replace("คลอง","ค.")+" · "+l.name,v:l.pct,txt:l.pct.toFixed(0)+"%",c:wlBand(l.pct).c,on:false,act:null}});
     if(!ls.length) note=WATER.ok===false?"ดึงข้อมูลไม่สำเร็จ":"กำลังโหลด…";
   }else{
     var order=STATIONS.map(function(s,i){return i}).sort(function(a,b){return CUR[b].pm-CUR[a].pm});
     mx=Math.max(60,CUR[order[0]].pm);std=37.5;lab="ฝุ่นแต่ละจุดวัด · ไมโครกรัม/ลบ.ม.";note="เส้นตั้ง = 37.5 มาตรฐานไทย · กดชื่อเพื่อดูรายละเอียดจุดนั้น";
-    rows=order.map(function(i){return {n:STATIONS[i].n,v:CUR[i].pm,txt:CUR[i].pm.toFixed(0),c:pmBand(CUR[i].pm).c,on:i===picked,act:function(){picked=(picked===i?-1:i);refresh()}}});
+    rows=order.map(function(i){return {lon:STATIONS[i].lon,lat:STATIONS[i].lat,n:STATIONS[i].n,v:CUR[i].pm,txt:CUR[i].pm.toFixed(0),c:pmBand(CUR[i].pm).c,on:i===picked,act:function(){picked=(picked===i?-1:i);refresh()}}});
   }
+  /* 3 อันดับแรก ติดหมายเลข ①②③ บนแผนที่ (แนวแผนที่ Lima: เลขในวงกลมดำ + วงเรืองรอบจุด) และหน้าชื่อในรายการ */
+  CALLOUTS=rows.slice(0,3).map(function(r){return {lon:r.lon,lat:r.lat,n:r.n,txt:r.txt,c:r.c}});STATIC_DIRTY=true;
   document.getElementById("rankLab").textContent=lab;
   document.getElementById("rankNote").textContent=note;
   rows.forEach(function(r){
@@ -1592,6 +1595,7 @@ function buildRank(){
     if(r.act){row.tabIndex=0;row.setAttribute("role","button");row.setAttribute("aria-pressed",String(r.on))}else row.style.cursor="default";
     row.innerHTML='<span class="nm"></span><span class="tr"><i></i><span class="std"></span></span><span class="vl"></span>';
     row.querySelector(".nm").textContent=r.n;row.querySelector(".nm").title=r.n;
+    if(box.children.length<3){var cn=document.createElement("span");cn.className="cnum";cn.setAttribute("aria-hidden","true");cn.textContent=box.children.length+1;row.querySelector(".nm").prepend(cn)}
     var bar=row.querySelector(".tr i");bar.style.width=Math.min(100,r.v/mx*100).toFixed(1)+"%";bar.style.background=rgb(r.c,1);
     row.querySelector(".std").style.left=(std/mx*100).toFixed(1)+"%";
     row.querySelector(".vl").textContent=r.txt;
@@ -1733,7 +1737,7 @@ function renderKey(msg){
   el.innerHTML="<b></b><div class=\"ramp\">"+ramp.map(function(c){return "<i style=\"background:"+rgb(c,1)+"\"></i>"}).join("")+"</div><div class=\"ends\"><span></span><span></span></div><div class=\"km\"></div>";
   el.querySelector("b").textContent=(msg||k[0]);
   var e=el.querySelectorAll(".ends span");e[0].textContent=k[1];e[1].textContent=k[2];
-  el.querySelector(".km").textContent=k[3]+(PRIMARY==="pm"&&PM_SPREAD<5?" · ตอนนี้ทั้งเมืองใกล้เคียงกัน แบบจำลองแยกรายเขตได้ไม่ชัด":"")+(focusCount()>1?" · อีก "+(focusCount()-1)+" ชั้นเปิดอยู่":"");
+  el.querySelector(".km").textContent=k[3]+" · ①②③ = "+(PRIMARY==="elev"?"ต่ำสุด":"สูงสุด")+" 3 อันดับ (ดูรายการในแผงซ้าย)"+(PRIMARY==="pm"&&PM_SPREAD<5?" · ตอนนี้ทั้งเมืองใกล้เคียงกัน แบบจำลองแยกรายเขตได้ไม่ชัด":"")+(focusCount()>1?" · อีก "+(focusCount()-1)+" ชั้นเปิดอยู่":"");
 }
 function flashKey(msg){renderKey(msg);document.getElementById("sr").textContent=msg;clearTimeout(flashKey.t);flashKey.t=setTimeout(function(){renderKey()},1800)}
 function layerUI(){
@@ -1900,14 +1904,6 @@ cv.addEventListener("touchend",function(e){if(e.touches.length<2){PINCH.on=false
 document.getElementById("zIn").addEventListener("click",function(){zoomAt(VIEW.cxs,VIEW.cys,1.5)});
 document.getElementById("zOut").addEventListener("click",function(){zoomAt(VIEW.cxs,VIEW.cys,1/1.5)});
 document.getElementById("zReset").addEventListener("click",function(){VIEW.z=1;VIEW.lonC=VIEW.latC=null;viewChanged()});
-/* สลับแผนที่ฐาน: ปุ่มบอกแบบที่จะเปลี่ยนไป (จำไว้ในเบราว์เซอร์) */
-var zBase=document.getElementById("zBase");
-function baseLabel(){var nx=BASE==="map"?"sat":"map";zBase.textContent=BASEMAPS[nx].name;zBase.setAttribute("aria-label","เปลี่ยนแผนที่ฐานเป็น"+BASEMAPS[nx].name)}
-baseLabel();
-zBase.addEventListener("click",function(){
-  BASE=BASE==="map"?"sat":"map";try{localStorage.setItem("breathes-base",BASE)}catch(e){}
-  TILE_OK=0;baseLabel();STATIC_DIRTY=true;
-});
 cv.addEventListener("click",function(e){
   if(VIEW.moved>4) return;   /* เพิ่งลากแผนที่ ไม่นับเป็นการกด */
   var r=cvRect(),mx=e.clientX-r.left,my=e.clientY-r.top,best=-1,bd=1e9;
@@ -1943,7 +1939,7 @@ cv.addEventListener("mouseleave",function(){tip.hidden=true});   /* ดอกไ
 
 /* ---------- ข้อมูลสด ---------- */
 function stamp(){try{return new Date().toLocaleString("th-TH",{timeZone:"Asia/Bangkok",dateStyle:"medium",timeStyle:"short"})}catch(e){return new Date().toISOString()}}
-var CRED=' · แผนที่ฐาน © <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a> (แผนที่เทา / ภาพดาวเทียม Maxar, Earthstar Geographics) และผู้ร่วมสร้าง OpenStreetMap'+
+var CRED=' · ถนน คลอง แม่น้ำ รางรถไฟ © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">ผู้ร่วมสร้าง OpenStreetMap</a> (ODbL, ดึงเมื่อ 20 ต.ค. 2569)'+
   ' · ฝนและระดับน้ำจาก <a href="https://www.thaiwater.net" target="_blank" rel="noopener">ThaiWater</a> (สสน. รวมสถานี กทม./สสน./กรมอุตุฯ)'+
   ' · เส้นแบ่ง 50 เขตจาก <a href="https://github.com/chingchai/OpenGISData-Thailand" target="_blank" rel="noopener">OpenGISData-Thailand</a> (CC BY 4.0)'+
   ' · ขอบเขต กทม. จาก <a href="https://github.com/apisit/thailand.json" target="_blank" rel="noopener">apisit/thailand.json</a>'+
