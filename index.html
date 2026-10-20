@@ -157,9 +157,9 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair}
 .mini.one{grid-template-columns:1fr}
 /* แผงซ้ายแสดงเฉพาะเรื่องเดียวกับชั้นแผนที่ */
 .off{display:none!important}
-/* ชั้นแผนที่: ชั้นที่ไม่ได้เลือกเบลอแต่ยังเห็นสีของตัวเอง */
-.lyr{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:blur(var(--blur,3.5px));opacity:.32;transition:filter .45s ease,opacity .45s ease}
-.lyr.on,.lyr.base{filter:none;opacity:1}
+/* ชั้นแผนที่: ชั้นที่เปิดซ้อนกัน ชั้นที่ปิดหายไป */
+.lyr{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;transition:opacity .35s ease}   /* ชั้นที่ปิด = หายไปเลย (เจ้าของงานเปลี่ยนจากเบลอจาง 20 ต.ค. 2569) */
+.lyr.on,.lyr.base{opacity:1}
 #cv{position:relative;z-index:3}
 .lyr,#cv,#basemap{transform-origin:0 0}
 #basemap{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .4s}
@@ -282,7 +282,7 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
   .layers{max-width:calc(100% - 20px)!important}
   .railbtn{top:auto;bottom:auto;top:250px;left:auto!important;right:10px;font-size:11px}
   #flag{top:96px!important}
-  .lyr{--blur:2.5px}
+
   /* มือถือ: เป้านิ้วกดอย่างน้อย 44px (Apple HIG / WCAG 2.5.5) */
   .layers button,.zoomer button,.btns button,.ptbtn,.railbtn,.row{min-height:44px}
   .zoomer button{width:44px;height:44px}
@@ -511,7 +511,7 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
       <button type="button" id="zOut" aria-label="ซูมออก">−</button>
       <button type="button" id="zReset" aria-label="กลับมุมมองทั้งเมือง" title="กลับมุมมองทั้งเมือง">⟲</button>
     </div>
-    <!-- ชั้นข้อมูล: เลือกได้หลายชั้น ชั้นที่เลือกคม ที่เหลือเบลอ (สีจุดหน้าปุ่ม = สีของชั้นนั้น) -->
+    <!-- ชั้นข้อมูล: เลือกได้หลายชั้น ชั้นที่ปิดหายไป (สีจุดหน้าปุ่ม = สีของชั้นนั้น) -->
     <div class="layers" role="group" aria-label="ชั้นข้อมูลบนแผนที่ เลือกได้หลายชั้น">
       <button type="button" id="lPm" aria-pressed="true"><i style="background:rgb(122,60,196)"></i>ฝุ่น</button>
       <button type="button" id="lHeat" aria-pressed="false"><i style="background:rgb(245,130,40)"></i>ความร้อน</button>
@@ -532,7 +532,7 @@ body.rail-off #mapKey{left:calc(var(--u)*3)}
     <div id="coach" hidden role="dialog" aria-labelledby="coachT">
       <b id="coachT">อ่านแผนที่นี้ใน 10 วินาที</b>
       <ol>
-        <li>ปุ่มด้านบนคือ "ชั้นข้อมูล" กดเปิด/ปิดได้หลายชั้น ชั้นที่เปิดจะชัด ที่ปิดจะเบลอไปข้างหลัง</li>
+        <li>ปุ่มด้านบนคือ "ชั้นข้อมูล" กดเปิด/ปิดได้หลายชั้น เปิดหลายชั้นซ้อนกันได้ ชั้นที่เปิดล่าสุดอยู่บนสุด ชั้นที่ปิดจะหายไป</li>
         <li>ชี้หรือแตะที่เขตเพื่อดูค่า · กด (หรือแตะซ้ำ) เพื่อดูภาพ 24 ชั่วโมง · เลือกเขตจากรายการในแผงข้อมูลก็ได้</li>
         <li>ซูมด้วยลูกกล้องเมาส์ / สองนิ้ว · ส่วนที่มีเครื่องหมาย + ในแผงข้อมูลกดเพื่อดูเพิ่ม</li>
       </ol>
@@ -720,6 +720,8 @@ var ELEV_COLS=[[48,26,12],[86,52,26],[120,82,46],[154,114,72],[187,150,106],[215
 var ELEV_NAMES=["≤0","1","2","3","4","5","6+"];
 function elevBand(e){return e<=0.5?0:e<1.5?1:e<2.5?2:e<3.5?3:e<4.5?4:e<5.5?5:6}
 function elevColor(e){return ELEV_COLS[elevBand(e)]}
+/* ไล่สีต่อเนื่องระหว่าง 7 สี (0 ม. → 6 ม.) */
+function elevRamp(v){var t=Math.max(0,Math.min(6,v)),i=Math.min(5,Math.floor(t)),f=t-i,a=ELEV_COLS[i],b=ELEV_COLS[i+1];return [a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f]}
 var INK=[11,11,20],NAVY=[27,31,94],RED=[232,65,60],BLUE=[29,78,216],PAPER="#ffffff";
 /* อุณหภูมิ: เย็นฟ้า → ปกติสีกระดาษ → ร้อนส้ม ตามแบบแผนที่อากาศทั่วไป (ไม่ใช้แดง เพราะแดง = ฝุ่นเกิน) */
 var TEMP_STOPS=[[24,[196,220,238]],[28,[243,241,236]],[32,[250,220,170]],[36,[245,180,110]],[40,[232,140,70]]];
@@ -1073,7 +1075,7 @@ function spawnMote(){
 function stepMotes(dt){
   if(!gridPts.length) return;
   var a=avg();
-  var target=Math.min(1600,Math.round(Math.pow(a.pm,1.25)*6));
+  var target=Math.min(800,Math.round(Math.pow(a.pm,1.25)*3));   /* ครึ่งหนึ่งของเดิม: ไม่ให้ตาลาย */
   while(motes.length<target) motes.push(spawnMote());
   if(motes.length>target) motes.length=target;
   /* ไหลตามลมจริง + ส่ายช้าๆ แบบลื่น (ไม่สุ่มทุกเฟรม ซึ่งทำให้สั่นกระตุก) · ซูมลึกแล้วไม่วิ่งเร็วเกิน */
@@ -1139,14 +1141,16 @@ fetch("data/bkk-elevation.json").then(okJSON).then(function(j){
     s[r*C+c]=sum/n;
   }
   ELEV={lo1:j.lo1,la2:j.la2,step:j.step,C:C,R:R,v:s,levels:[],below:[]};
-  /* สีพื้น: ขยายกริด 6 เท่า (เฉลี่ยถ่วงระหว่างจุด) จากค่าดิบ แล้วแบ่งสีเป็นขั้นละ 1 ม. ขอบขั้นจึงโค้งตามจริง ไม่เป็นบล็อก */
-  var K=6,IW=(C-1)*K+1,IH=(R-1)*K+1,ic=document.createElement("canvas");ic.width=IW;ic.height=IH;
-  var ig=ic.getContext("2d"),im=ig.createImageData(IW,IH);
+  /* สีพื้น: ไล่สีต่อเนื่องจากค่าที่เกลี่ยแล้ว (เส้นขาวทุก 1 ม. บอกขั้นอยู่แล้ว) ขยาย 6 เท่าให้เนียน
+     หน้ากาก "เท่า/ต่ำกว่าระดับน้ำทะเล" จากค่าดิบ (ไม่เกลี่ย จะได้ไม่ลบที่ต่ำจริงทิ้ง) ขอบโค้งตามการเฉลี่ยถ่วง */
+  var K=6,IW=(C-1)*K+1,IH=(R-1)*K+1,ic=document.createElement("canvas"),mc=document.createElement("canvas");ic.width=mc.width=IW;ic.height=mc.height=IH;
+  var ig=ic.getContext("2d"),im=ig.createImageData(IW,IH),mg=mc.getContext("2d"),mm=mg.createImageData(IW,IH);
+  function bil(A,r0,c0,fr,fc){return (A[r0*C+c0]*(1-fc)+A[r0*C+c0+1]*fc)*(1-fr)+(A[(r0+1)*C+c0]*(1-fc)+A[(r0+1)*C+c0+1]*fc)*fr}
   for(var y=0;y<IH;y++){var rr=y/K,r0=Math.min(R-2,Math.floor(rr)),fr=rr-r0;
-    for(var x=0;x<IW;x++){var cc=x/K,c0=Math.min(C-2,Math.floor(cc)),fc=cc-c0;
-      var v=(e[r0*C+c0]*(1-fc)+e[r0*C+c0+1]*fc)*(1-fr)+(e[(r0+1)*C+c0]*(1-fc)+e[(r0+1)*C+c0+1]*fc)*fr;
-      var col=elevColor(v),o=(y*IW+x)*4;im.data[o]=col[0];im.data[o+1]=col[1];im.data[o+2]=col[2];im.data[o+3]=255}}
-  ig.putImageData(im,0,0);ELEV.img=ic;
+    for(var x=0;x<IW;x++){var cc=x/K,c0=Math.min(C-2,Math.floor(cc)),fc=cc-c0,o=(y*IW+x)*4;
+      var col=elevRamp(bil(s,r0,c0,fr,fc));im.data[o]=col[0];im.data[o+1]=col[1];im.data[o+2]=col[2];im.data[o+3]=255;
+      var raw=bil(e,r0,c0,fr,fc);mm.data[o+3]=raw<=0.5?255:raw<=0.8?Math.round((0.8-raw)/0.3*255):0}}
+  ig.putImageData(im,0,0);ELEV.img=ic;mg.putImageData(mm,0,0);ELEV.sea=mc;
   /* จุดที่ค่าดิบเท่าหรือต่ำกว่าระดับน้ำทะเล (ช่องละ ~1 ตร.กม.) */
   for(var r2=0;r2<R;r2++)for(var c2=0;c2<C;c2++) if(e[r2*C+c2]<=0) ELEV.below.push([j.lo1+c2*j.step,j.la2-r2*j.step]);
   var mx=Math.max.apply(null,s);
@@ -1205,6 +1209,15 @@ function draw(time){
 function drawTop(a,k){
   useLayer(null);ctx.clearRect(0,0,W,H);
   /* ขอบเมือง + แม่น้ำ: จุดยึดสายตา อยู่บนสุดเสมอ ไม่เบลอ */
+  /* แม่น้ำและคลองหลัก: วาดบนสุดทับชั้นข้อมูล (ไม่งั้นสีพื้นความร้อน/ความสูงกลบหายหมด) ขอบขาวบางๆ ให้แยกจากพื้น */
+  var OP=osmPaths();
+  if(OP){
+    ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+    var rw=Math.max(2.2,Math.min(30,0.33*PXPERKM)),cw=Math.max(0.9,Math.min(3,0.09*PXPERKM));
+    ctx.strokeStyle="rgba(255,255,255,0.75)";ctx.lineWidth=rw+2;ctx.stroke(OP.river);
+    ctx.strokeStyle="rgba(110,160,196,0.55)";ctx.lineWidth=cw;ctx.stroke(OP.canalMain);ctx.strokeStyle="rgb(110,160,196)";ctx.lineWidth=rw;ctx.stroke(OP.river);
+    ctx.restore();
+  }
   /* ขอบเมืองเส้นเข้ม (พื้นแผนที่สว่างแล้ว เส้นขาวมองไม่เห็น) · แม่น้ำเส้นหยาบ Natural Earth ใช้เฉพาะตอนยังไม่มีข้อมูล OSM */
   ctx.save();ctx.lineWidth=1.4;ctx.strokeStyle="rgba(40,40,50,0.85)";ctx.lineJoin="round";ctx.stroke(outlinePath2D||cityPath2D);
   if(!OSM){
@@ -1244,8 +1257,10 @@ fetch("data/bkk-osm.json").then(okJSON).then(function(j){
   function dec(list){return list.map(function(a){
     var o=new Float64Array(a.length),x=0,y=0,b=[999,-999,999,-999];
     for(var i=0;i<a.length;i+=2){x+=a[i];y+=a[i+1];var lo=x/j.s,la=y/j.s;o[i]=lo;o[i+1]=la;if(lo<b[0])b[0]=lo;if(lo>b[1])b[1]=lo;if(la<b[2])b[2]=la;if(la>b[3])b[3]=la}
-    o.box=b;return o})}
+    o.box=b;var L=0;for(var k=2;k<o.length;k+=2){var dx=(o[k]-o[k-2])*COSL,dy=o[k+1]-o[k-1];L+=Math.sqrt(dx*dx+dy*dy)}o.km=L*111;return o})}
   OSM={m:dec(j.roads.m),p:dec(j.roads.p),s:dec(j.roads.s),t:dec(j.roads.t),river:dec(j.rivers),canal:dec(j.canals),rail:dec(j.rail)};
+  /* คลองหลัก = ช่วงคลองที่ยาวเกิน ~3 กม. (คลองสายสั้นในซอยไม่เอา จะได้ไม่รก) วาดทับบนสุดคู่กับแม่น้ำ */
+  OSM.canalMain=OSM.canal.filter(function(a){return a.km>3});
   OSMP=null;STATIC_DIRTY=true;
 }).catch(function(){OSM=null});
 /* แปลงเส้นเป็น Path2D ตามมุมมองปัจจุบัน (ทำใหม่เฉพาะตอนซูม/เลื่อน ไม่ใช่ทุกเฟรม) */
@@ -1350,12 +1365,15 @@ function drawElev(){
   var x0=px(ELEV.lo1),y0=py(ELEV.la2),x1=px(ELEV.lo1+(ELEV.C-1)*ELEV.step),y1=py(ELEV.la2-(ELEV.R-1)*ELEV.step);
   ctx.save();ctx.clip(cityPath2D);
   ctx.globalAlpha=0.92;ctx.imageSmoothingEnabled=true;ctx.drawImage(ELEV.img,x0,y0,x1-x0,y1-y0);ctx.globalAlpha=1;
-  /* ต่ำกว่า/เท่าระดับน้ำทะเล: ลายขีดขาวทับช่องละ ~1 ตร.กม. */
-  if(ELEV.below.length){
-    if(!drawElev.pat){var pc=document.createElement("canvas");pc.width=pc.height=7;var pg=pc.getContext("2d");pg.strokeStyle="rgba(255,255,255,0.8)";pg.lineWidth=1.2;pg.beginPath();pg.moveTo(0,7);pg.lineTo(7,0);pg.stroke();drawElev.pat=ctx.createPattern(pc,"repeat")}
-    var hs=ELEV.step/2,bp=new Path2D();
-    ELEV.below.forEach(function(b){var X0=px(b[0]-hs),X1=px(b[0]+hs),Y0=py(b[1]+hs),Y1=py(b[1]-hs);bp.rect(X0,Y0,X1-X0,Y1-Y0)});
-    ctx.fillStyle=drawElev.pat;ctx.fill(bp);
+  /* เท่า/ต่ำกว่าระดับน้ำทะเล: ลายขีดขาว เฉพาะในหน้ากากที่ขอบโค้งเนียน (วาดลายในแผ่นพัก แล้วตัดด้วยหน้ากาก) */
+  if(ELEV.sea){
+    if(!drawElev.tmp) drawElev.tmp=document.createElement("canvas");
+    var tc=drawElev.tmp;if(tc.width!==cv.width||tc.height!==cv.height){tc.width=cv.width;tc.height=cv.height}
+    var tg=tc.getContext("2d");tg.setTransform(1,0,0,1,0,0);tg.clearRect(0,0,tc.width,tc.height);tg.setTransform(DPR,0,0,DPR,0,0);
+    tg.strokeStyle="rgba(255,255,255,0.85)";tg.lineWidth=1.3;tg.beginPath();
+    for(var hx=-H;hx<W;hx+=6){tg.moveTo(hx,H);tg.lineTo(hx+H,0)}tg.stroke();
+    tg.globalCompositeOperation="destination-in";tg.imageSmoothingEnabled=true;tg.drawImage(ELEV.sea,x0,y0,x1-x0,y1-y0);tg.globalCompositeOperation="source-over";
+    ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(tc,0,0);ctx.restore();
   }
   /* เส้นชั้นความสูงสีขาวบางๆ ทุก 1 ม. + ตัวเลขกำกับห่างๆ */
   ctx.strokeStyle="rgba(255,255,255,0.7)";ctx.lineWidth=0.8;
@@ -1393,74 +1411,49 @@ function drawRain(){
 /* ฝุ่น = จุดสีม่วง ขนาด/เข้มตามค่า หลุดแถวเมื่อหนัก + เส้นมาตรฐาน 37.5 + จุดวัด 12 จุด */
 function drawPM(time,k){
   useLayer("pm");ctx.clearRect(0,0,W,H);
-  /* ฝุ่นแบบฮาล์ฟโทน: จุดเล็กมากทั่วเมือง จุดโตขึ้นเฉพาะที่ฝุ่นหนา (ขนาด/สี = ค่าฝุ่นที่ตำแหน่งนั้น)
-     การไหลตามลมแสดงด้วยระลอกบนจุด + เม็ดฝุ่นลอยด้านบน (1 วินาทีบนจอ = 2.5 นาทีจริง) */
-  ctx.save();ctx.clip(cityPath2D);
-  /* รวมจุดทั้งหมดเป็น "เส้นทางเดียว" ต่อสี แล้ววาดครั้งเดียว (เร็วกว่าวาดทีละจุดหลายสิบเท่า)
-     จุดเล็กมากใช้สี่เหลี่ยมแทนวงกลม ตาแยกไม่ออกแต่วาดเร็วกว่า */
-  /* สีจุด = ระดับฝุ่นของจุดนั้น ใช้ 5 เฉดเดียวกับคำอธิบายสี (ฝุ่นน้อย = จางจริง ไม่ทาให้ดูแย่เกินจริง) */
-  var P=[new Path2D(),new Path2D(),new Path2D(),new Path2D(),new Path2D()],zd=1/Math.sqrt(VIEW.z);
-  for(var i=0;i<gridPts.length;i++){
-    var g=gridPts[i],w=g.w||{x:0,y:0},sp=Math.sqrt(w.x*w.x+w.y*w.y);
-    var ux=sp?w.x/sp:0,uy=sp?w.y/sp:0,x=g.x,y=g.y,pm=g.pm||0;
-    /* จุดอยู่กับที่ แต่ "ระลอก" พองยุบช้าๆ เคลื่อนไปตามลม เหมือนลมพัดผ่านทุ่งหญ้า (ไม่กระตุกวนซ้ำแบบสายพาน) */
-    var ph=((x*ux+y*uy)-time*sp*zd)/70*6.2832;
-    var rad=(0.7+g.step*0.42*Math.pow(clamp01((pm-10)/70),0.9))*(1+0.2*Math.sin(ph+g.h*0.4));
-    /* ฝุ่นหนักเกินมาตรฐาน: ส่ายหลุดแถวช้าๆ (ภาพยุ่งตามข้อมูล) */
-    if(pm>37.5){var dj=clamp01((pm-37.5)/60)*g.step*0.5;x+=Math.sin(time*0.4+g.h)*dj;y+=Math.cos(time*0.33+g.h*1.3)*dj}
-    var b=pm<15?0:pm<25?1:pm<37.5?2:pm<75?3:4,Q=P[b];
-    if(rad<1.2) Q.rect(x-rad,y-rad,rad*2,rad*2);
-    else{Q.moveTo(x+rad,y);Q.arc(x,y,rad,0,6.2832)}
-  }
-  for(var bi=0;bi<5;bi++){ctx.fillStyle=rgb(RAMP.pm[bi],0.95);ctx.fill(P[bi])}
-  ctx.restore();
-  /* เม็ดฝุ่นลอย: เส้นสั้นๆ ไหลตามลม ค่อยๆ ปรากฏแล้วจางหาย (แนวเดียวกับ Zoom Earth / Windy)
-     รวมเป็น 4 ระดับความจาง แทนการเปลี่ยนความจางทีละเม็ด */
-  ctx.strokeStyle="rgba(255,255,255,"+(0.55+k*0.35).toFixed(3)+")";ctx.lineCap="round";
+  /* ส่วนที่นิ่ง (วงเรืองฝุ่น + จุดอ่านค่า) วาดในแผ่นพักครั้งเดียว แล้วแปะทุกเฟรม */
+  if(!PMSTATIC||STATIC_PM_DIRTY) drawPMStatic();
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(PMSTATIC,0,0);ctx.restore();
+  /* เม็ดฝุ่นลอย: เส้นสั้นๆ ไหลตามลม ค่อยๆ ปรากฏแล้วจางหาย (บอกทิศลม) รวมเป็น 4 ระดับความจาง */
+  ctx.strokeStyle="rgba(255,255,255,"+(0.5+k*0.3).toFixed(3)+")";ctx.lineCap="round";
   var mp=[new Path2D(),new Path2D(),new Path2D(),new Path2D()];
   for(var m=0;m<motes.length;m++){
     var mo=motes[m],fade=Math.min(1,mo.age/1.5,(mo.max-mo.age)/1.5);if(fade<=0) continue;
     var tl=0.6,ex=mo.x-(mo.vx||0)*tl,ey=mo.y-(mo.vy||0)*tl,Pq=mp[Math.min(3,Math.floor(fade*4))];
     Pq.moveTo(mo.x,mo.y);Pq.lineTo(Math.abs(ex-mo.x)+Math.abs(ey-mo.y)<0.8?mo.x+0.8:ex,ey);
   }
-  for(var q=0;q<4;q++){ctx.globalAlpha=(q+1)/4;ctx.lineWidth=1.3;ctx.stroke(mp[q])}
+  for(var q=0;q<4;q++){ctx.globalAlpha=(q+1)/4;ctx.lineWidth=1.2;ctx.stroke(mp[q])}
   ctx.globalAlpha=1;
-  /* ส่วนที่ไม่ขยับของชั้นฝุ่น (เส้นชั้นค่า จุดอ่านค่า ตัวเลข) วาดไว้ในแผ่นพักครั้งเดียว แล้วแปะทุกเฟรม */
-  if(!PMSTATIC||STATIC_PM_DIRTY) drawPMStatic();
-  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(PMSTATIC,0,0);ctx.restore();
 }
 var PMSTATIC=null,STATIC_PM_DIRTY=true;
+/* ฝุ่น = วงเรืองนุ่มรอบจุดอ่านค่า 12 จุด (แนว kernel density / แผนที่วงเรือง)
+   รัศมี ความเข้ม และสี = ค่าฝุ่นของจุดนั้น · วงซ้อนกันแล้วเข้มขึ้นเอง (multiply) ตรงที่หลายจุดค่าสูง
+   ไม่ตัดตามขอบเมือง: ฝุ่นไม่หยุดที่เส้นเขต · ค่ามาจากแบบจำลอง จุดอ่านค่าจึงเป็นวงกลมเส้นบาง ไม่ใช่สัญลักษณ์สถานีวัด */
 function drawPMStatic(){
   if(!PMSTATIC) PMSTATIC=document.createElement("canvas");
   PMSTATIC.width=cv.width;PMSTATIC.height=cv.height;
   var g=PMSTATIC.getContext("2d");g.setTransform(DPR,0,0,DPR,0,0);
-  var keep=ctx;ctx=g;
-  /* เส้นชั้นค่า: วาดเฉพาะเมื่อ 12 จุดต่างกันจริง (≥5 ไมโครกรัม) ไม่งั้นเป็นลวดลายที่ข้อมูลไม่มี
-     (แบบจำลอง Open-Meteo ในเอเชียช่องละ ~45 กม. ทั้งเมืองมีแค่ 1–2 ช่อง) */
-  var pms=CUR.map(function(c){return c.pm}),spread=Math.max.apply(null,pms)-Math.min.apply(null,pms);
-  PM_SPREAD=spread;
-  if(spread>=5){
-    ctx.save();ctx.clip(cityPath2D);
-    [[25,rgb(RAMP.pm[2],0.6),[1,3],0.8],[50,rgb(RAMP.pm[3],0.8),[5,3],0.9],[75,rgb(RAMP.pm[4],0.9),[5,3],1],[37.5,rgb(RAMP.pm[4],1),[],2.2]].forEach(function(L){
-      var pth=CONTOURS[L[0]];if(!pth) return;
-      ctx.setLineDash(L[2]);ctx.strokeStyle="rgba(255,255,255,0.85)";ctx.lineWidth=L[3]+2.5;ctx.stroke(pth);
-      ctx.strokeStyle=L[1];ctx.lineWidth=L[3];ctx.stroke(pth);
-    });
-    ctx.setLineDash([]);ctx.restore();
-  }
-  /* จุดอ่านค่า 12 จุด: สี่เหลี่ยม "กลวง" = ค่าจากแบบจำลอง (ทึบ = วัดจริง ใช้กับเครื่องวัดฝน/ระดับน้ำ) */
-  var big=W>900;ctx.textBaseline="middle";
+  var pms=CUR.map(function(c){return c.pm});PM_SPREAD=Math.max.apply(null,pms)-Math.min.apply(null,pms);
+  g.globalCompositeOperation="multiply";
   for(var s=0;s<STATIONS.length;s++){
-    var st=STATIONS[s],c=CUR[s],on=(s===picked),X=px(st.lon),Y=py(st.lat),sz=on?6:4.5;
-    ctx.fillStyle="rgba(255,255,255,0.9)";ctx.fillRect(X-sz-1.5,Y-sz-1.5,sz*2+3,sz*2+3);
-    ctx.strokeStyle=rgb(RAMP.pm[4],1);ctx.lineWidth=2;ctx.strokeRect(X-sz+1,Y-sz+1,sz*2-2,sz*2-2);
-    if(on){ctx.strokeStyle=rgb(INK,1);ctx.lineWidth=1.5;ctx.strokeRect(X-12,Y-12,24,24)}
-    ctx.font="700 "+(big?"13px":"11px")+" Epilogue,sans-serif";
-    var tx=c.pm.toFixed(0),w=ctx.measureText(tx).width,lx=X+sz+4;
-    ctx.fillStyle="rgba(255,255,255,0.92)";ctx.fillRect(lx-2,Y-8,w+5,16);ctx.fillStyle=rgb(INK,1);ctx.textAlign="left";ctx.fillText(tx,lx,Y+0.5);
+    var st=STATIONS[s],pm=CUR[s].pm,X=px(st.lon),Y=py(st.lat),f=clamp01((pm-5)/70);
+    var Rk=(6.5+f*7)*PXPERKM,b=pm<15?0:pm<25?1:pm<37.5?2:pm<75?3:4,col=RAMP.pm[b],a0=0.6+0.35*f;
+    var gr=g.createRadialGradient(X,Y,0,X,Y,Rk);
+    gr.addColorStop(0,rgb(col,a0));gr.addColorStop(0.45,rgb(col,a0*0.55));gr.addColorStop(1,rgb(col,0));
+    g.fillStyle=gr;g.beginPath();g.arc(X,Y,Rk,0,6.2832);g.fill();
   }
-  ctx.textBaseline="alphabetic";
-  ctx=keep;STATIC_PM_DIRTY=false;
+  g.globalCompositeOperation="source-over";
+  /* จุดอ่านค่า: วงกลมเส้นบางสีเข้ม + ป้ายดำตัวเลขขาว (แนวแผนที่ในภาพอ้างอิง) */
+  var big=W>900;g.textBaseline="middle";g.textAlign="left";
+  for(var s2=0;s2<STATIONS.length;s2++){
+    var st2=STATIONS[s2],c=CUR[s2],on=(s2===picked),X2=px(st2.lon),Y2=py(st2.lat),r=on?13:10;
+    g.strokeStyle="rgba(17,17,17,0.85)";g.lineWidth=on?1.8:1;g.beginPath();g.arc(X2,Y2,r,0,6.2832);g.stroke();
+    g.beginPath();g.moveTo(X2-3,Y2);g.lineTo(X2+3,Y2);g.moveTo(X2,Y2-3);g.lineTo(X2,Y2+3);g.stroke();
+    g.font="700 "+(big?"12px":"11px")+" Epilogue,sans-serif";
+    var tx=c.pm.toFixed(0),w=g.measureText(tx).width,lx=X2+r+3;
+    g.fillStyle="#111";g.fillRect(lx,Y2-8,w+8,16);g.fillStyle="#fff";g.fillText(tx,lx+4,Y2+0.5);
+  }
+  g.textBaseline="alphabetic";STATIC_PM_DIRTY=false;
 }
 var PM_SPREAD=99;
 /* ระดับน้ำ = แท่งตั้ง โทนเขียวน้ำทะเล เต็มแท่ง = ถึงตลิ่ง ล้นตลิ่งมีหยดน้ำเด้ง */
@@ -1550,14 +1543,14 @@ function drawFurniture(a){
 window.BREATHES_BENCH=function(n){
   n=n||30;STATIC_DIRTY=true;var t0=performance.now();draw(1);var first=performance.now()-t0;
   t0=performance.now();for(var i=0;i<n;i++) draw(1+i/30);
-  return {firstFrameMs:+first.toFixed(1),avgFrameMs:+((performance.now()-t0)/n).toFixed(1),dots:gridPts.length};
+  return {firstFrameMs:+first.toFixed(1),avgFrameMs:+((performance.now()-t0)/n).toFixed(1),dots:motes.length};
 };
 /* ตรวจทุกอย่างในคำสั่งเดียว (ใช้ทุกครั้งหลังแก้): เปิดคอนโซลแล้วพิมพ์ BREATHES_CHECK()
    ความเร็ว · ปุ่มกดได้จริง · การเข้าถึง (ชื่อปุ่ม ความคมชัดของสี ขนาดตัวอักษร) · ความซื่อตรงของข้อมูล · error */
 window.BREATHES_CHECK=function(){
   var R=[];function add(name,ok,detail,warnOnly){R.push({ตรวจ:name,ผล:ok?"ผ่าน":(warnOnly?"เตือน":"ไม่ผ่าน"),รายละเอียด:detail})}
   /* 1) ความเร็ว */
-  var b=BREATHES_BENCH(20);add("ความเร็ววาดต่อเฟรม",b.avgFrameMs<16,b.avgFrameMs+" ms (งบ 16 ms) · จุดฝุ่น "+b.dots);
+  var b=BREATHES_BENCH(20);add("ความเร็ววาดต่อเฟรม",b.avgFrameMs<16,b.avgFrameMs+" ms (งบ 16 ms) · เม็ดฝุ่นลอย "+b.dots);
   /* 2) ปุ่มกดได้จริง: ตรงกลางปุ่มต้องเจอตัวปุ่มเอง ไม่ใช่สิ่งอื่นที่บังอยู่ */
   var ctrls=[].filter.call(document.querySelectorAll("button,[role=button],input,a,select"),function(e){var r=e.getBoundingClientRect();return r.width>0&&r.height>0&&r.right>0&&r.bottom>0&&r.left<innerWidth&&r.top<innerHeight});
   /* ปุ่มที่ถูกเลื่อนออกนอกกรอบที่เลื่อนได้ (เช่นแถบปุ่มชั้นบนมือถือ) ไม่นับ เพราะเลื่อนมาถึงได้ */
@@ -1779,7 +1772,7 @@ document.getElementById("bDemo").addEventListener("click",function(){setScen("de
 /* ---------- ปุ่มเลือกชั้น: เลือกได้หลายชั้น ชั้นที่เลือกคม ที่เหลือเบลอ ----------
    ชั้นที่กดล่าสุด = "ชั้นหลัก" (PRIMARY) ใช้กำหนดอันดับในแผงซ้ายและตัวเลขใต้ชื่อเขต */
 var LAYER_INFO={
-  pm:{btn:"lPm",sub:"จุดสีม่วงคือฝุ่น ณ ตำแหน่งนั้น อากาศดี จุดเล็กเรียงเป็นแถว ฝุ่นยิ่งหนัก จุดยิ่งใหญ่ เข้ม และหลุดจากแถว"},
+  pm:{btn:"lPm",sub:"วงเรืองสีม่วงคือฝุ่นรอบจุดอ่านค่า ยิ่งเข้มและกว้าง ฝุ่นยิ่งมาก · เส้นขาวลอย = ลมพาฝุ่นไปทางไหน"},
   heat:{btn:"lHeat",sub:"สีพื้นแต่ละเขตคือความร้อนที่ร่างกายรู้สึก (อุณหภูมิรวมความชื้น) ส้มอ่อน = สบาย แดงเข้ม = อันตราย"},
   rain:{btn:"lRain",sub:"ลายเฉียงสีน้ำเงินคือฝน 24 ชม. ที่วัดจริงในแต่ละเขต ยิ่งถี่ยิ่งฝนมาก วงกลม = เครื่องวัดฝน"},
   water:{btn:"lWater",sub:"แท่งตั้งคือระดับน้ำในคลองและแม่น้ำ เต็มแท่ง = น้ำถึงขอบตลิ่ง ค่าวัดจริงจาก ThaiWater"},
@@ -1800,7 +1793,7 @@ function toggleLayer(id){
 }
 /* legend ย่อบนแผนที่ของชั้นหลัก: สีไล่ระดับ + ความหมายหนึ่งบรรทัด */
 var KEY_TEXT={
-  pm:["ฝุ่น PM2.5","ดี","มีผลต่อสุขภาพ","จุดใหญ่และเข้ม = ฝุ่นมาก · เส้นขาวลอย = ทิศลมพาฝุ่นไป"],
+  pm:["ฝุ่น PM2.5","ดี","มีผลต่อสุขภาพ","วงเรืองเข้มและกว้าง = ฝุ่นมาก · วงกลมเส้นบาง = จุดอ่านค่า (แบบจำลอง) · เส้นขาวลอย = ทิศลม"],
   heat:["ร้อนที่ร่างกายรู้สึก","ปกติ","อันตรายมาก","สีพื้นเขต · ชี้เพื่อดู °C"],
   rain:["ฝน 24 ชม. (วัดจริง)","เล็กน้อย","หนักมาก","ลายเฉียงถี่ = ฝนมาก · วงกลม = เครื่องวัด"],
   water:["ระดับน้ำเทียบตลิ่ง","น้ำน้อย","ล้นตลิ่ง","แท่งเต็ม = น้ำถึงขอบตลิ่ง"],

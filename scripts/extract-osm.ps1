@@ -62,7 +62,9 @@ foreach ($el in $data["elements"]) {
     $cls = if ($h -eq "motorway" -or $h -eq "trunk") { "m" } elseif ($h -eq "primary") { "p" } elseif ($h -eq "secondary") { "s" } else { "t" }
     [void]$roads[$cls].Add((Encode $geom 20))
   } elseif ($tg.ContainsKey("waterway")) {
-    if ($tg["waterway"] -eq "river") { [void]$rivers.Add((Encode $geom 15)) } else { [void]$canals.Add((Encode $geom 25)) }
+    # แม่น้ำใหญ่จริงเท่านั้น (เจ้าพระยา ท่าจีน บางปะกง) ที่เหลือที่ติดป้าย river เป็นลำน้ำเล็ก นับเป็นคลอง
+    $nm = "" + $tg["name"] + " " + $tg["name:en"] + " " + $tg["name:th"]
+    if ($tg["waterway"] -eq "river" -and $nm -match "เจ้าพระยา|Chao Phraya|ท่าจีน|Tha Chin|บางปะกง|Bang Pakong") { [void]$rivers.Add((Encode $geom 15)) } else { [void]$canals.Add((Encode $geom 25)) }
   } elseif ($tg.ContainsKey("railway")) {
     [void]$rail.Add((Encode $geom 25))
   }
