@@ -1990,9 +1990,11 @@ function loadHistory(){
   var q="latitude="+lats+"&longitude="+lons+"&past_days=1&forecast_days=2&timezone=Asia%2FBangkok";
   Promise.all([
     fetch("https://air-quality-api.open-meteo.com/v1/air-quality?"+q+"&hourly=pm2_5,uv_index").then(okJSON),
-    fetch("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m").then(okJSON).catch(function(){return null})
+    fetch("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m").then(okJSON).catch(function(){return null})
   ]).then(function(res){
     var A=Array.isArray(res[0])?res[0]:[res[0]],B=res[1]?(Array.isArray(res[1])?res[1]:[res[1]]):null,times=A[0].hourly.time;
+    /* เก็บค่า 24 ชม. แยกทีละจุด ไว้เปิดภาพ 24 ชม. ของเขตได้ทันที (ใช้จุดที่ใกล้เขตที่สุด) */
+    if(B&&B.length===A.length){try{STATION_SERIES=A.map(function(a,i){return seriesFrom([a],[B[i]])})}catch(e){STATION_SERIES=null}}
     /* ชั่วโมงปัจจุบันตามเวลากรุงเทพ */
     var now=new Date(Date.now()+7*3600*1000).toISOString().slice(0,13)+":00";
     var end=times.indexOf(now);if(end<0) end=times.length-1;
@@ -2178,28 +2180,44 @@ function fetchSeries(lats,lons){
   var key=lats.join(",")+"|"+lons.join(",");
   if(PT.cache[key]&&Date.now()-PT.cache[key].at<15*60*1000) return Promise.resolve(PT.cache[key].d);
   var q="latitude="+lats.join(",")+"&longitude="+lons.join(",")+"&past_days=1&forecast_days=1&timezone=Asia%2FBangkok";
-  return Promise.all([
-    fetch("https://air-quality-api.open-meteo.com/v1/air-quality?"+q+"&hourly=pm2_5").then(okJSON),
-    fetch("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m").then(okJSON)
-  ]).then(function(res){
+  /* แต่ละคำขอรอไม่เกิน 15 วินาที ล้มแล้วลองใหม่เองอีก 1 ครั้ง (บริการข้อมูลช้า/ติดจำกัดชั่วคราวบ่อย) */
+  function get(url){
+    var ac=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac) ac.abort()},15000);
+    return fetch(url,ac?{signal:ac.signal}:{}).then(okJSON).then(function(j){clearTimeout(tm);return j},function(e){clearTimeout(tm);throw e});
+  }
+  function once(){
+    return Promise.all([
+      get("https://air-quality-api.open-meteo.com/v1/air-quality?"+q+"&hourly=pm2_5"),
+      get("https://api.open-meteo.com/v1/forecast?"+q+"&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m")
+    ]);
+  }
+  return once().catch(function(){return new Promise(function(ok){setTimeout(ok,2500)}).then(once)}).then(function(res){
     var A=Array.isArray(res[0])?res[0]:[res[0]],B=Array.isArray(res[1])?res[1]:[res[1]];
-    var times=B[0].hourly.time,now=new Date(Date.now()+7*3600*1000).toISOString().slice(0,13)+":00";
-    var end=times.indexOf(now);if(end<0) end=times.length-1;
-    var out=[];
-    for(var h=Math.max(0,end-23);h<=end;h++){
-      var o={hr:parseInt(times[h].slice(11,13),10),pm:0,t:0,h:0,r:0,ux:0,uy:0},n=0,na=0;
-      B.forEach(function(p){var H=p.hourly;if(H.temperature_2m[h]==null) return;n++;
-        o.t+=H.temperature_2m[h];o.h+=H.relative_humidity_2m[h];o.r+=H.precipitation[h]||0;
-        var a=(270-H.wind_direction_10m[h])*Math.PI/180;o.ux+=Math.cos(a)*H.wind_speed_10m[h];o.uy+=Math.sin(a)*H.wind_speed_10m[h]});
-      A.forEach(function(p){var v=p.hourly.pm2_5[h];if(v!=null){o.pm+=v;na++}});
-      if(n){o.t/=n;o.h/=n;o.r/=n;o.ux/=n;o.uy/=n}
-      o.pm=na?o.pm/na:null;o.ws=Math.sqrt(o.ux*o.ux+o.uy*o.uy);
-      out.push(o);
-    }
+    var out=seriesFrom(A,B);
     PT.cache[key]={at:Date.now(),d:out};
     return out;
   });
 }
+/* รวมค่ารายชั่วโมง 24 ชม. ล่าสุด (เฉลี่ยทุกจุดที่ให้มา) เป็นรูปแบบที่ภาพ 24 ชม. ใช้
+   ชั่วโมงที่ไม่มีค่า: ข้ามช่องนั้น ไม่ใส่ 0 (กันเส้นอุณหภูมิ/ลมเพี้ยน) */
+function seriesFrom(A,B){
+  var times=B[0].hourly.time,now=new Date(Date.now()+7*3600*1000).toISOString().slice(0,13)+":00";
+  var end=times.indexOf(now);if(end<0) end=times.length-1;
+  var out=[];
+  for(var h=Math.max(0,end-23);h<=end;h++){
+    var o={hr:parseInt(times[h].slice(11,13),10),pm:0,t:0,h:0,r:0,ux:0,uy:0},n=0,na=0;
+    B.forEach(function(p){var H=p.hourly;if(H.temperature_2m[h]==null||H.wind_speed_10m[h]==null||H.wind_direction_10m[h]==null) return;n++;
+      o.t+=H.temperature_2m[h];o.h+=H.relative_humidity_2m[h]||0;o.r+=H.precipitation[h]||0;
+      var a=(270-H.wind_direction_10m[h])*Math.PI/180;o.ux+=Math.cos(a)*H.wind_speed_10m[h];o.uy+=Math.sin(a)*H.wind_speed_10m[h]});
+    A.forEach(function(p){var v=p.hourly.pm2_5[h];if(v!=null){o.pm+=v;na++}});
+    if(n){o.t/=n;o.h/=n;o.r/=n;o.ux/=n;o.uy/=n}else if(out.length){var pv=out[out.length-1];o.t=pv.t;o.h=pv.h;o.ux=pv.ux;o.uy=pv.uy}
+    o.pm=na?o.pm/na:null;o.ws=Math.sqrt(o.ux*o.ux+o.uy*o.uy);
+    out.push(o);
+  }
+  return out;
+}
+/* ค่า 24 ชม. ของ 12 จุดอ่านค่า (ได้มาพร้อมแถบ 24 ชม. ตอนเปิดหน้า) ใช้เปิดภาพ 24 ชม. ได้ทันที */
+var STATION_SERIES=null;
 
 function openPortrait(name,sub,lats,lons){
   PT.open=true;PT.data=null;PT.name=name;PT.failed=false;
@@ -2207,22 +2225,40 @@ function openPortrait(name,sub,lats,lons){
   document.getElementById("ptSub").textContent=sub+" · กำลังโหลด 24 ชั่วโมงที่ผ่านมา…";
   if(!PT.open||ptEl.hidden) PT.back=document.activeElement;   /* จำไว้ คืนโฟกัสตอนปิด */
   ptEl.hidden=false;document.body.classList.add("pt-open");sizePortrait();document.getElementById("ptClose").focus();
-  /* Open-Meteo ฝั่งอากาศอาจใช้ ~5–10 วินาที ถ้าเกิน 30 วินาทีบอกผู้ชมแทนการค้างหน้าโหลดไว้เฉยๆ */
-  var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error("timeout"))},30000)});
-  Promise.race([fetchSeries(lats,lons),timeout]).then(function(d){
-    if(!PT.open||PT.name!==name) return;
-    PT.data=d;
-    var last=d[d.length-1],vals=d.filter(function(x){return x.pm!=null});
-    var over=vals.filter(function(x){return x.pm>=37.5}).length;
+  var sEl=document.getElementById("ptSub"),tok=PT.tok=(PT.tok||0)+1;
+  function summary(d){
+    var vals=d.filter(function(x){return x.pm!=null}),over=vals.filter(function(x){return x.pm>=37.5}).length;
     var mean=vals.reduce(function(s,x){return s+x.pm},0)/(vals.length||1);
-    document.getElementById("ptSub").textContent=sub+" · เฉลี่ย 24 ชม. "+mean.toFixed(1)+" ไมโครกรัม/ลบ.ม. · เกินมาตรฐาน "+over+" ชม. · ค่าจริงรายชั่วโมง (แบบจำลอง Open-Meteo)";
+    return "เฉลี่ย 24 ชม. "+mean.toFixed(1)+" ไมโครกรัม/ลบ.ม. · เกิน 37.5 (เกณฑ์เฉลี่ย 24 ชม.) "+over+" ชม.";
+  }
+  /* เปิดทันทีด้วยค่าที่มีอยู่แล้ว: จุดอ่านค่าที่ใกล้ที่สุด (เขต) หรือเฉลี่ย 12 จุด (ทั้งเมือง)
+     แล้วค่อยดึงค่าตรงจุดกลางเขตมาแทน · ดึงไม่ได้ก็ยังมีภาพให้ดู ไม่ค้างหน้าว่าง */
+  var fb=null,fbNote="";
+  if(STATION_SERIES){
+    if(lats.length>1){
+      fb=STATION_SERIES[0].map(function(o,h){
+        var s={hr:o.hr,pm:0,t:0,h:0,r:0,ux:0,uy:0},na=0,N=STATION_SERIES.length;
+        STATION_SERIES.forEach(function(S){var x=S[h]||o;s.t+=x.t/N;s.h+=x.h/N;s.r+=x.r/N;s.ux+=x.ux/N;s.uy+=x.uy/N;if(x.pm!=null){s.pm+=x.pm;na++}});
+        s.pm=na?s.pm/na:null;s.ws=Math.sqrt(s.ux*s.ux+s.uy*s.uy);return s;
+      });
+      fbNote="ชุดเดียวกับแถบ 24 ชม. ด้านล่าง";
+    }else{
+      var bi=0,bd=1e9;STATIONS.forEach(function(s,i){var dx=(s.lon-lons[0])*COSL,dy=s.lat-lats[0],d=dx*dx+dy*dy;if(d<bd){bd=d;bi=i}});
+      fb=STATION_SERIES[bi];fbNote="จากจุดอ่านค่าใกล้เขตที่สุด (~"+(Math.sqrt(bd)*111).toFixed(0)+" กม.)";
+    }
+  }
+  if(fb){PT.data=fb;sEl.textContent=sub+" · "+summary(fb)+" · "+fbNote+" · กำลังโหลดค่าตรงจุดนี้…"}
+  fetchSeries(lats,lons).then(function(d){
+    if(!PT.open||PT.tok!==tok) return;
+    PT.data=d;
+    sEl.textContent=sub+" · "+summary(d)+" · ค่ารายชั่วโมง (แบบจำลอง Open-Meteo)";
   }).catch(function(){
-    if(!PT.open||PT.name!==name) return;
+    if(!PT.open||PT.tok!==tok) return;
     /* บอกว่าเกิดอะไร + ทางแก้ในปุ่มเดียว (Nielsen: ช่วยให้กู้คืนจากข้อผิดพลาดได้) */
-    var sEl=document.getElementById("ptSub");sEl.textContent=sub+" · ดึงข้อมูลไม่สำเร็จ (เครือข่ายหรือบริการข้อมูลช้า) ";
+    sEl.textContent=sub+" · "+(fb?summary(fb)+" · แสดงค่า"+fbNote+" เพราะดึงค่าตรงจุดนี้ไม่สำเร็จ ":"ดึงข้อมูลไม่สำเร็จ (เครือข่ายหรือบริการข้อมูลช้า) ");
     var rb=document.createElement("button");rb.type="button";rb.className="ptbtn";rb.textContent="ลองใหม่";rb.style.marginLeft="6px";
     rb.addEventListener("click",function(){openPortrait(name,sub,lats,lons)});sEl.appendChild(rb);
-    PT.failed=true;
+    PT.failed=!fb;
   });
 }
 function closePortrait(){PT.open=false;ptEl.hidden=true;document.body.classList.remove("pt-open");if(PT.back&&PT.back.focus) PT.back.focus();PT.back=null}
